@@ -1,0 +1,169 @@
+import { useAuth } from '../../store/AuthContext'
+import { useStudio } from '../../store/StudioContext'
+import { Button } from '../ui/Button'
+
+const ACTIONS = [
+  {
+    id: 'studio' as const,
+    title: 'Studio',
+    blurb: 'Upload photos, apply frames, and process documentation.',
+    cta: 'Open Studio',
+    editorsOnly: true,
+  },
+  {
+    id: 'gallery' as const,
+    title: 'Gallery',
+    blurb: 'Browse completed incident albums and download archives.',
+    cta: 'Open Gallery',
+    editorsOnly: false,
+  },
+  {
+    id: 'facebook' as const,
+    title: 'Facebook',
+    blurb: 'Compose official Page posts from albums or a blank draft.',
+    cta: 'Create Post',
+    editorsOnly: false,
+  },
+  {
+    id: 'frames' as const,
+    title: 'Frames',
+    blurb: 'Manage reusable documentation frame overlays.',
+    cta: 'Frame Library',
+    editorsOnly: true,
+  },
+]
+
+export function HomeView() {
+  const { user, canEdit, isAdmin } = useAuth()
+  const { setView, albums, session, frames } = useStudio()
+
+  return (
+    <div className="relative h-full overflow-y-auto bg-navy-950">
+      {/* Atmospheric foundation */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(232,184,74,0.12), transparent 55%),
+            radial-gradient(ellipse 60% 40% at 100% 20%, rgba(30,42,58,0.9), transparent 50%),
+            linear-gradient(180deg, #0d1520 0%, #080e16 45%, #0d1520 100%)
+          `,
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        aria-hidden
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, #fff 2px, #fff 3px)',
+        }}
+      />
+
+      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+        {/* Hero — brand first */}
+        <section className="flex flex-1 flex-col items-center justify-center pb-10 pt-4 text-center sm:pb-14 sm:pt-8">
+          <img
+            src="/logo.png"
+            alt="Brigada Onse Sun Valley Fire and Rescue"
+            className="mb-6 h-28 w-28 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:h-36 sm:w-36"
+            width={144}
+            height={144}
+          />
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-500">
+            Parañaque&apos;s Finest
+          </p>
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl lg:text-6xl">
+            Brigada Onse SVFAR
+          </h1>
+          <p className="mt-2 text-lg font-semibold uppercase tracking-[0.2em] text-gold-500 sm:text-xl">
+            Studio
+          </p>
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-ink-300 sm:text-base">
+            Professional emergency-response photo documentation for Sun Valley
+            Fire and Rescue — frame, archive, and publish with confidence.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {canEdit ? (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => setView('studio')}
+              >
+                Start documenting
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => setView('gallery')}
+              >
+                Open Gallery
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setView('facebook')}
+            >
+              Create Facebook post
+            </Button>
+          </div>
+
+          <p className="mt-6 text-xs text-ink-400">
+            Signed in as{' '}
+            <span className="font-medium text-ink-100">{user?.displayName}</span>
+            {isAdmin ? ' · Administrator' : ''}
+          </p>
+        </section>
+
+        {/* Status strip */}
+        <div className="mb-8 grid grid-cols-3 gap-3 border-y border-navy-700 py-4 text-center">
+          {[
+            ['Session photos', String(session.photos.length)],
+            ['Albums', String(albums.length)],
+            ['Frames', String(frames.length)],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <div className="text-2xl font-semibold text-ink-50">{value}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Workspace links */}
+        <section className="pb-10">
+          <h2 className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+            Workspaces
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {ACTIONS.filter((a) => canEdit || !a.editorsOnly).map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => setView(action.id)}
+                className="group border border-navy-700 bg-navy-900/80 p-5 text-left transition-colors hover:border-gold-500/50 hover:bg-navy-850"
+              >
+                <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-gold-500 group-hover:text-gold-400">
+                  {action.title}
+                </div>
+                <p className="mb-3 text-sm text-ink-300">{action.blurb}</p>
+                <span className="text-xs font-semibold text-ink-100 underline-offset-2 group-hover:underline">
+                  {action.cta} →
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <footer className="pb-4 text-center text-[11px] text-ink-400">
+          For God and Country · made with love by{' '}
+          <span className="text-gold-500">finest 12</span>
+        </footer>
+      </div>
+    </div>
+  )
+}

@@ -177,7 +177,7 @@ function hydrateAlbumPhoto(photo: AlbumPhoto): AlbumPhoto {
 }
 
 export function StudioProvider({ children }: { children: ReactNode }) {
-  const [view, setView] = useState<AppView>('studio')
+  const [view, setView] = useState<AppView>('home')
   const [session, setSession] = useState<StudioSession>(createEmptySession)
   const [frames, setFrames] = useState<FrameAsset[]>([])
   const [albums, setAlbums] = useState<Album[]>([])

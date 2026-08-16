@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './store/AuthContext'
 import { StudioProvider, useStudio } from './store/StudioContext'
 import { AppShell } from './components/layout/AppShell'
-import { AuthGate } from './components/auth/AuthGate'
+import { PublicHome } from './components/home/PublicHome'
+import { HomeView } from './components/home/HomeView'
 import { StudioView } from './components/studio/StudioView'
 import { GalleryView } from './components/gallery/GalleryView'
 import { FramesView } from './components/frames/FramesView'
@@ -17,7 +18,7 @@ function AppRoutes() {
 
   useEffect(() => {
     if (!canEdit && (view === 'studio' || view === 'frames')) {
-      setView('gallery')
+      setView('home')
     }
   }, [canEdit, setView, view])
 
@@ -31,6 +32,7 @@ function AppRoutes() {
 
   return (
     <AppShell>
+      {view === 'home' ? <HomeView /> : null}
       {view === 'studio' && canEdit ? <StudioView /> : null}
       {view === 'gallery' ? <GalleryView /> : null}
       {view === 'facebook' ? <FacebookView /> : null}
@@ -52,7 +54,7 @@ function AuthenticatedApp() {
   }
 
   if (needsSetup || !session) {
-    return <AuthGate />
+    return <PublicHome />
   }
 
   return (

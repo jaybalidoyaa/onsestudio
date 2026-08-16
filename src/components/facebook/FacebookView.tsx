@@ -1,48 +1,76 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   buildFacebookCaption,
   captionSourceFromAlbum,
   captionSourceFromMetadata,
+  type CaptionSource,
 } from '../../lib/caption'
 import { postPhotosToFacebookPage } from '../../lib/facebook'
+import { createId } from '../../lib/utils'
+import {
+  ALARM_TYPES,
+  CALLSIGN_ROSTER,
+  RESPONDING_UNITS,
+} from '../../lib/rosters'
+import { createDefaultMetadata } from '../../types'
 import { useAuth } from '../../store/AuthContext'
 import { useStudio } from '../../store/StudioContext'
 import { formatDisplayDate } from '../../lib/utils'
 import { Button } from '../ui/Button'
-import { Field, Select, Textarea } from '../ui/Panel'
+import { Field, Input, Select, Textarea } from '../ui/Panel'
+import { MultiSelect } from '../ui/MultiSelect'
+
+type PostMode = 'album' | 'blank'
+
+interface ManualPhoto {
+  id: string
+  name: string
+  blob: Blob
+  url: string
+}
 
 export function FacebookView() {
-  const {
-    albums,
-    albumPhotos,
-    loadAlbumPhotos,
-    session,
-    setView,
-  } = useStudio()
+  const { albums, albumPhotos, loadAlbumPhotos, session, setView } = useStudio()
   const { settings, saveFacebookSettings, isAdmin, logActivity, user, canEdit } =
     useAuth()
 
-  const [albumId, setAlbumId] = useState<string>('')
+  const [mode, setMode] = useState<PostMode>('blank')
+  const [albumId, setAlbumId] = useState('')
   const [caption, setCaption] = useState('')
   const [selected, setSelected] = useState<string[]>([])
+  const [manualPhotos, setManualPhotos] = useState<ManualPhoto[]>([])
+  const [blank, setBlank] = useState<CaptionSource>(() => {
+    const d = createDefaultMetadata()
+    return {
+      date: d.date,
+      address: '',
+      alarm: '',
+      unit: '',
+      callsign: '',
+    }
+  })
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [feeling, setFeeling] = useState('Documenting an incident response')
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const configured =
     Boolean(settings.facebook.pageId.trim()) &&
     Boolean(settings.facebook.pageAccessToken.trim())
 
   const activeAlbum = albums.find((a) => a.id === albumId) ?? null
-  const photos = albumId ? albumPhotos[albumId] ?? [] : []
+  const albumPics = albumId ? albumPhotos[albumId] ?? [] : []
 
   useEffect(() => {
-    if (albumId) void loadAlbumPhotos(albumId)
-  }, [albumId, loadAlbumPhotos])
+    if (mode === 'album' && albumId) void loadAlbumPhotos(albumId)
+  }, [mode, albumId, loadAlbumPhotos])
 
   useEffect(() => {
+    if (mode === 'blank') {
+      setCaption(buildFacebookCaption(blank))
+      return
+    }
     if (activeAlbum) {
       setCaption(buildFacebookCaption(captionSourceFromAlbum(activeAlbum)))
       setSelected(
@@ -52,31 +80,66 @@ export function FacebookView() {
       )
       return
     }
-    // Fall back to current studio session event info
-    setCaption(
-      buildFacebookCaption(captionSourceFromMetadata(session.metadata)),
-    )
+    setCaption(buildFacebookCaption(captionSourceFromMetadata(session.metadata)))
     setSelected([])
-  }, [activeAlbum, albumPhotos, session.metadata])
+  }, [mode, blank, activeAlbum, albumPhotos, session.metadata])
 
-  const selectedPhotos = useMemo(
-    () => photos.filter((p) => selected.includes(p.id)),
-    [photos, selected],
+  useEffect(() => {
+    return () => {
+      manualPhotos.forEach((p) => URL.revokeObjectURL(p.url))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const selectedAlbumBlobs = useMemo(
+    () =>
+      albumPics
+        .filter((p) => selected.includes(p.id))
+        .map((p) => p.processedBlob),
+    [albumPics, selected],
   )
 
-  const toggle = (id: string) => {
+  const postBlobs =
+    mode === 'blank'
+      ? manualPhotos.map((p) => p.blob)
+      : selectedAlbumBlobs
+
+  const toggleAlbumPhoto = (id: string) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
   }
 
-  const refreshCaptionFromSource = () => {
-    if (activeAlbum) {
+  const addManualFiles = (files: FileList | null) => {
+    if (!files?.length) return
+    const next: ManualPhoto[] = []
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue
+      next.push({
+        id: createId('mphoto'),
+        name: file.name,
+        blob: file,
+        url: URL.createObjectURL(file),
+      })
+    }
+    setManualPhotos((prev) => [...prev, ...next])
+  }
+
+  const removeManual = (id: string) => {
+    setManualPhotos((prev) => {
+      const target = prev.find((p) => p.id === id)
+      if (target) URL.revokeObjectURL(target.url)
+      return prev.filter((p) => p.id !== id)
+    })
+  }
+
+  const refreshCaption = () => {
+    if (mode === 'blank') {
+      setCaption(buildFacebookCaption(blank))
+    } else if (activeAlbum) {
       setCaption(buildFacebookCaption(captionSourceFromAlbum(activeAlbum)))
     } else {
-      setCaption(
-        buildFacebookCaption(captionSourceFromMetadata(session.metadata)),
-      )
+      setCaption(buildFacebookCaption(captionSourceFromMetadata(session.metadata)))
     }
   }
 
@@ -87,8 +150,12 @@ export function FacebookView() {
       setError('Connect your Facebook Page in Settings before posting.')
       return
     }
-    if (!selectedPhotos.length) {
-      setError('Select at least one photograph from an album.')
+    if (!postBlobs.length) {
+      setError(
+        mode === 'blank'
+          ? 'Add at least one photograph to your blank post.'
+          : 'Select at least one photograph from an album.',
+      )
       return
     }
     setBusy(true)
@@ -98,7 +165,7 @@ export function FacebookView() {
         pageId: settings.facebook.pageId,
         accessToken: settings.facebook.pageAccessToken,
         caption,
-        photos: selectedPhotos.map((p) => p.processedBlob),
+        photos: postBlobs,
         onProgress: (current, total) =>
           setProgress(`Uploading photograph ${current} of ${total}…`),
       })
@@ -116,13 +183,13 @@ export function FacebookView() {
 
       await logActivity(
         'facebook.post',
-        `Posted “${activeAlbum?.title || 'incident'}” (${selectedPhotos.length} photos) to ${result.pageName || 'Facebook Page'}`,
+        `Posted ${mode} (${postBlobs.length} photos) to ${result.pageName || 'Facebook Page'}`,
       )
       setProgress('')
       setSuccess(
         result.postId
           ? `Posted to ${result.pageName || 'Facebook Page'}. Post ID: ${result.postId}`
-          : `Posted ${selectedPhotos.length} photo(s) to ${result.pageName || 'Facebook Page'}.`,
+          : `Posted ${postBlobs.length} photo(s).`,
       )
     } catch (err) {
       setProgress('')
@@ -139,10 +206,10 @@ export function FacebookView() {
       await navigator.clipboard.writeText(caption)
       window.open('https://www.facebook.com/', '_blank', 'noopener,noreferrer')
       setSuccess(
-        'Caption copied. Facebook opened — paste the caption and attach your photos manually on the Page.',
+        'Caption copied. Facebook opened — paste and attach photos on the Page.',
       )
     } catch {
-      setError('Could not copy caption. Copy it manually, then open Facebook.')
+      setError('Could not copy caption.')
     }
   }
 
@@ -151,64 +218,101 @@ export function FacebookView() {
     settings.facebook.pageId ||
     'Facebook Page'
 
+  const fieldPreview: [string, string][] =
+    mode === 'blank'
+      ? [
+          ['Date', blank.date ? formatDisplayDate(blank.date) : '—'],
+          ['Address', blank.address || '—'],
+          ['Alarm', blank.alarm || '—'],
+          ['Unit', blank.unit || '—'],
+          ['Callsign', blank.callsign || '—'],
+        ]
+      : activeAlbum
+        ? [
+            ['Date', formatDisplayDate(activeAlbum.date)],
+            ['Address', activeAlbum.address || activeAlbum.location || '—'],
+            ['Alarm', activeAlbum.alarm || '—'],
+            ['Unit', activeAlbum.unit || activeAlbum.respondingUnits || '—'],
+            [
+              'Callsign',
+              activeAlbum.callsign || activeAlbum.documentationOfficer || '—',
+            ],
+          ]
+        : [
+            ['Date', formatDisplayDate(session.metadata.date)],
+            ['Address', session.metadata.address || '—'],
+            ['Alarm', session.metadata.alarm || '—'],
+            ['Unit', session.metadata.unit || '—'],
+            ['Callsign', session.metadata.callsign || '—'],
+          ]
+
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-navy-950">
-      <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold text-ink-50">
-              Create Facebook Post
-            </h1>
-            <p className="text-sm text-ink-400">
-              Compose an official incident post using Event Information and
-              album photographs
-            </p>
+    <div className="flex h-full min-h-0 flex-col bg-navy-950">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-navy-700 bg-navy-900 px-4 py-3">
+        <div>
+          <h1 className="text-lg font-semibold text-ink-50">Facebook Post</h1>
+          <p className="text-xs text-ink-400">
+            {pageLabel} · {user?.displayName}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-md border border-navy-600 p-0.5">
+            <button
+              type="button"
+              onClick={() => setMode('blank')}
+              className={`rounded px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+                mode === 'blank'
+                  ? 'bg-gold-500 text-navy-950'
+                  : 'text-ink-300 hover:text-ink-50'
+              }`}
+            >
+              Blank post
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('album')}
+              className={`rounded px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+                mode === 'album'
+                  ? 'bg-gold-500 text-navy-950'
+                  : 'text-ink-300 hover:text-ink-50'
+              }`}
+            >
+              From album
+            </button>
           </div>
           {!configured && isAdmin ? (
-            <Button variant="secondary" onClick={() => setView('settings')}>
-              Connect Facebook Page
+            <Button size="sm" variant="secondary" onClick={() => setView('settings')}>
+              Connect Page
             </Button>
           ) : null}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1fr_320px]">
-          {/* Facebook-style composer card */}
-          <section className="overflow-hidden rounded-xl border border-navy-600 bg-navy-900 shadow-lg">
-            <header className="flex items-center justify-between border-b border-navy-700 px-4 py-3">
-              <h2 className="text-base font-semibold text-ink-50">
-                Create post
-              </h2>
-              <span className="text-xs text-ink-400">{pageLabel}</span>
-            </header>
-
-            <div className="space-y-4 p-4">
-              <div className="flex items-start gap-3">
-                <img
-                  src="/logo.png"
-                  alt=""
-                  className="h-11 w-11 rounded-full object-contain bg-navy-850 p-0.5"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-ink-50">
-                    {settings.facebook.pageName ||
-                      'Brigada Onse Sun Valley Fire and Rescue'}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[11px] text-ink-200">
-                      Public
-                    </span>
-                    <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[11px] text-ink-200">
-                      {feeling}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-ink-400">
-                    Posting as {user?.displayName || 'Studio user'}
-                  </p>
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+        {/* Composer — fills height */}
+        <section className="flex min-h-0 flex-col border-r border-navy-700 bg-navy-900">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+            <div className="flex items-start gap-3">
+              <img
+                src="/logo.png"
+                alt=""
+                className="h-11 w-11 rounded-full object-contain bg-navy-850"
+              />
+              <div>
+                <div className="font-semibold text-ink-50">
+                  {settings.facebook.pageName ||
+                    'Brigada Onse Sun Valley Fire and Rescue'}
+                </div>
+                <div className="mt-1 text-[11px] text-ink-400">
+                  Public ·{' '}
+                  {mode === 'blank'
+                    ? 'Manual blank post'
+                    : 'Album / Studio source'}
                 </div>
               </div>
+            </div>
 
+            {mode === 'album' ? (
               <Field label="Album source">
                 <Select
                   value={albumId}
@@ -223,60 +327,165 @@ export function FacebookView() {
                   ))}
                 </Select>
               </Field>
+            ) : (
+              <div className="space-y-3 rounded-md border border-navy-600 bg-navy-850 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+                  Manual incident details
+                </p>
+                <Field label="Date">
+                  <Input
+                    type="date"
+                    value={blank.date}
+                    onChange={(e) =>
+                      setBlank((b) => ({ ...b, date: e.target.value }))
+                    }
+                  />
+                </Field>
+                <Field label="Location / Address">
+                  <Input
+                    value={blank.address}
+                    onChange={(e) =>
+                      setBlank((b) => ({ ...b, address: e.target.value }))
+                    }
+                    placeholder="Sun Valley, Parañaque City"
+                  />
+                </Field>
+                <Field label="Incident Type / Alarm">
+                  <Select
+                    value={
+                      (ALARM_TYPES as readonly string[]).includes(blank.alarm)
+                        ? blank.alarm
+                        : ''
+                    }
+                    onChange={(e) =>
+                      setBlank((b) => ({ ...b, alarm: e.target.value }))
+                    }
+                  >
+                    <option value="">Select…</option>
+                    {ALARM_TYPES.map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Responding Unit">
+                  <MultiSelect
+                    options={RESPONDING_UNITS}
+                    value={blank.unit}
+                    onChange={(unit) => setBlank((b) => ({ ...b, unit }))}
+                    placeholder="Select units…"
+                    searchable={false}
+                    maxVisible={5}
+                  />
+                </Field>
+                <Field label="Callsign">
+                  <MultiSelect
+                    options={CALLSIGN_ROSTER}
+                    value={blank.callsign}
+                    onChange={(callsign) =>
+                      setBlank((b) => ({ ...b, callsign }))
+                    }
+                    placeholder="Select callsigns…"
+                    searchable
+                    maxVisible={6}
+                  />
+                </Field>
+              </div>
+            )}
 
-              {!albumId ? (
-                <div className="rounded-md border border-navy-700 bg-navy-850 px-3 py-2 text-xs text-ink-300">
-                  Caption is filled from Studio Event Information
-                  {session.metadata.address
-                    ? ` (${session.metadata.address})`
-                    : ''}
-                  . Select an album below to attach processed photographs, or
-                  create an album first.
-                  <div className="mt-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setView(canEdit ? 'studio' : 'gallery')}
-                    >
-                      {canEdit ? 'Open Studio' : 'Open Gallery'}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-300">
+                  Post text
+                </span>
+                <Button size="sm" variant="ghost" onClick={refreshCaption}>
+                  Apply template
+                </Button>
+              </div>
+              <Textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                className="min-h-[280px] w-full font-sans text-sm leading-relaxed lg:min-h-[360px]"
+                placeholder="Write your post…"
+              />
+            </div>
 
+            {mode === 'blank' ? (
               <div>
-                <div className="mb-1.5 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-300">
-                    Post text
+                    Photos ({manualPhotos.length})
                   </span>
                   <Button
                     size="sm"
-                    variant="ghost"
-                    onClick={refreshCaptionFromSource}
+                    variant="secondary"
+                    onClick={() => fileRef.current?.click()}
                   >
-                    Reset template
+                    Add photos
                   </Button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      addManualFiles(e.target.files)
+                      e.target.value = ''
+                    }}
+                  />
                 </div>
-                <Textarea
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  rows={18}
-                  className="min-h-[320px] font-sans text-sm leading-relaxed"
-                  placeholder="What's happening on scene?"
-                />
+                {manualPhotos.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="flex w-full flex-col items-center justify-center rounded-md border border-dashed border-navy-600 bg-navy-850 px-4 py-10 text-sm text-ink-400 hover:border-gold-500/40 hover:text-ink-200"
+                  >
+                    Drop or click to add photographs
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+                    {manualPhotos.map((photo, index) => (
+                      <div
+                        key={photo.id}
+                        className="group relative overflow-hidden rounded-lg border border-navy-600"
+                      >
+                        <img
+                          src={photo.url}
+                          alt={photo.name}
+                          className="aspect-square w-full object-cover"
+                        />
+                        <span className="absolute left-1 top-1 rounded bg-navy-950/80 px-1 text-[10px]">
+                          {index + 1}
+                        </span>
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1 rounded bg-navy-950/80 px-1.5 text-xs text-alert-500 opacity-0 group-hover:opacity-100"
+                          onClick={() => removeManual(photo.id)}
+                          aria-label="Remove photo"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {albumId ? (
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-300">
-                      Add photos to your post ({selected.length} selected)
-                    </span>
+            ) : (
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-300">
+                    Album photos ({selected.length} selected)
+                  </span>
+                  {albumId ? (
                     <div className="flex gap-1">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setSelected(photos.map((p) => p.id))}
+                        onClick={() =>
+                          setSelected(albumPics.map((p) => p.id))
+                        }
                       >
                         All
                       </Button>
@@ -288,182 +497,146 @@ export function FacebookView() {
                         None
                       </Button>
                     </div>
-                  </div>
-                  {photos.length === 0 ? (
-                    <p className="text-sm text-ink-400">
-                      Loading album photographs…
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                      {photos.map((photo, index) => {
-                        const on = selected.includes(photo.id)
-                        return (
-                          <button
-                            key={photo.id}
-                            type="button"
-                            onClick={() => toggle(photo.id)}
-                            className={`relative overflow-hidden rounded-lg border ${
-                              on
-                                ? 'border-gold-500 ring-1 ring-gold-500'
-                                : 'border-navy-600 opacity-55'
-                            }`}
-                            aria-pressed={on}
-                          >
-                            <img
-                              src={photo.thumbnailUrl}
-                              alt={`Photo ${index + 1}`}
-                              className="aspect-square w-full object-cover"
-                            />
-                            <span className="absolute left-1 top-1 rounded bg-navy-950/80 px-1 text-[10px]">
-                              {index + 1}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
+                  ) : null}
                 </div>
-              ) : null}
-
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-navy-700 bg-navy-850 px-3 py-2">
-                <span className="text-xs text-ink-300">Add to your post</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={!albums.length}
-                  onClick={() => {
-                    if (!albumId && albums[0]) setAlbumId(albums[0].id)
-                  }}
-                >
-                  📷 Photo
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    setFeeling((f) =>
-                      f.includes('Proud')
-                        ? 'Documenting an incident response'
-                        : 'Feeling proud to serve',
-                    )
-                  }
-                >
-                  😊 Feeling
-                </Button>
-              </div>
-
-              {progress ? (
-                <p className="text-sm text-gold-500 animate-pulse-soft">
-                  {progress}
-                </p>
-              ) : null}
-              {error ? (
-                <p className="rounded-md border border-alert-500/40 bg-alert-500/10 px-3 py-2 text-sm text-alert-500">
-                  {error}
-                </p>
-              ) : null}
-              {success ? (
-                <p className="rounded-md border border-ok-500/40 bg-ok-500/10 px-3 py-2 text-sm text-ok-500">
-                  {success}
-                </p>
-              ) : null}
-            </div>
-
-            <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-navy-700 bg-navy-850 px-4 py-3">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => void navigator.clipboard.writeText(caption)}
-                >
-                  Copy caption
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => void copyAndOpenFacebook()}
-                >
-                  Open Facebook (manual)
-                </Button>
-              </div>
-              <Button
-                variant="primary"
-                className="min-w-[140px]"
-                disabled={busy || !selectedPhotos.length || !configured}
-                onClick={() => void publish()}
-              >
-                {busy ? 'Posting…' : 'Post to Page'}
-              </Button>
-            </footer>
-          </section>
-
-          {/* Side panel: live event fields preview */}
-          <aside className="space-y-3">
-            <div className="rounded-xl border border-navy-600 bg-navy-900 p-4">
-              <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
-                Caption fields
-              </h3>
-              <dl className="space-y-2 text-sm">
-                {(activeAlbum
-                  ? [
-                      ['Date', formatDisplayDate(activeAlbum.date)],
-                      [
-                        'Address',
-                        activeAlbum.address || activeAlbum.location || '—',
-                      ],
-                      ['Alarm', activeAlbum.alarm || '—'],
-                      [
-                        'Unit',
-                        activeAlbum.unit || activeAlbum.respondingUnits || '—',
-                      ],
-                      [
-                        'Callsign',
-                        activeAlbum.callsign ||
-                          activeAlbum.documentationOfficer ||
-                          '—',
-                      ],
-                    ]
-                  : [
-                      ['Date', formatDisplayDate(session.metadata.date)],
-                      ['Address', session.metadata.address || '—'],
-                      ['Alarm', session.metadata.alarm || '—'],
-                      ['Unit', session.metadata.unit || '—'],
-                      ['Callsign', session.metadata.callsign || '—'],
-                    ]
-                ).map(([k, v]) => (
-                  <div key={k} className="flex justify-between gap-3 border-b border-navy-800 py-1.5">
-                    <dt className="text-ink-400">{k}</dt>
-                    <dd className="text-right font-medium text-ink-100">{v}</dd>
+                {!albumId ? (
+                  <div className="rounded-md border border-navy-700 bg-navy-850 px-3 py-3 text-xs text-ink-300">
+                    Select an album to attach processed photographs, or switch
+                    to <strong className="text-ink-50">Blank post</strong> to
+                    upload photos manually.
+                    {canEdit ? (
+                      <div className="mt-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setView('studio')}
+                        >
+                          Open Studio
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
-                ))}
-              </dl>
-              <p className="mt-3 text-[11px] text-ink-400">
-                Edit these in Studio → Event Information, then create an album
-                or reset the caption template.
-              </p>
-              {canEdit ? (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="mt-3 w-full"
-                  onClick={() => setView('studio')}
-                >
-                  Edit Event Information
-                </Button>
-              ) : null}
-            </div>
-
-            {!configured ? (
-              <div className="rounded-xl border border-warn-500/40 bg-warn-500/10 p-4 text-sm text-ink-100">
-                Facebook Page is not connected. Ask an admin to add the Page ID
-                and access token in Settings.
-              </div>
-            ) : (
-              <div className="rounded-xl border border-navy-600 bg-navy-900 p-4 text-sm text-ink-300">
-                Connected to{' '}
-                <strong className="text-ink-50">{pageLabel}</strong>
+                ) : albumPics.length === 0 ? (
+                  <p className="text-sm text-ink-400">Loading photographs…</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+                    {albumPics.map((photo, index) => {
+                      const on = selected.includes(photo.id)
+                      return (
+                        <button
+                          key={photo.id}
+                          type="button"
+                          onClick={() => toggleAlbumPhoto(photo.id)}
+                          className={`relative overflow-hidden rounded-lg border ${
+                            on
+                              ? 'border-gold-500 ring-1 ring-gold-500'
+                              : 'border-navy-600 opacity-55'
+                          }`}
+                          aria-pressed={on}
+                        >
+                          <img
+                            src={photo.thumbnailUrl}
+                            alt={`Photo ${index + 1}`}
+                            className="aspect-square w-full object-cover"
+                          />
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
-          </aside>
-        </div>
+
+            {progress ? (
+              <p className="text-sm text-gold-500 animate-pulse-soft">{progress}</p>
+            ) : null}
+            {error ? (
+              <p className="rounded-md border border-alert-500/40 bg-alert-500/10 px-3 py-2 text-sm text-alert-500">
+                {error}
+              </p>
+            ) : null}
+            {success ? (
+              <p className="rounded-md border border-ok-500/40 bg-ok-500/10 px-3 py-2 text-sm text-ok-500">
+                {success}
+              </p>
+            ) : null}
+          </div>
+
+          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-navy-700 bg-navy-850 px-4 py-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => void navigator.clipboard.writeText(caption)}
+              >
+                Copy caption
+              </Button>
+              <Button variant="ghost" onClick={() => void copyAndOpenFacebook()}>
+                Open Facebook
+              </Button>
+            </div>
+            <Button
+              variant="primary"
+              className="min-w-[140px]"
+              disabled={busy || !postBlobs.length || !configured}
+              onClick={() => void publish()}
+            >
+              {busy ? 'Posting…' : 'Post to Page'}
+            </Button>
+          </footer>
+        </section>
+
+        {/* Side panel — full height */}
+        <aside className="flex min-h-0 flex-col overflow-y-auto bg-navy-950 p-4">
+          <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+            Caption fields
+          </h3>
+          <dl className="mb-4 space-y-0 border border-navy-700 bg-navy-900">
+            {fieldPreview.map(([k, v]) => (
+              <div
+                key={k}
+                className="flex justify-between gap-3 border-b border-navy-800 px-3 py-2.5 text-sm last:border-0"
+              >
+                <dt className="text-ink-400">{k}</dt>
+                <dd className="max-w-[60%] text-right font-medium text-ink-100">
+                  {v}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mb-4 border border-navy-700 bg-navy-900 p-3 text-xs text-ink-300">
+            {mode === 'blank' ? (
+              <>
+                Fill details and add photos here. Use{' '}
+                <strong className="text-ink-50">Apply template</strong> to
+                rebuild the official caption anytime.
+              </>
+            ) : (
+              <>
+                Pulls details from a Gallery album or the current Studio session.
+                Switch to <strong className="text-ink-50">Blank post</strong>{' '}
+                for a fully manual draft.
+              </>
+            )}
+          </div>
+
+          {configured ? (
+            <div className="border border-navy-700 bg-navy-900 p-3 text-sm text-ink-300">
+              Connected to{' '}
+              <strong className="text-ink-50">{pageLabel}</strong>
+            </div>
+          ) : (
+            <div className="border border-warn-500/40 bg-warn-500/10 p-3 text-sm text-ink-100">
+              Facebook Page is not connected. Ask an admin to add credentials in
+              Settings.
+            </div>
+          )}
+
+          <div className="mt-auto pt-6 text-[11px] text-ink-400">
+            {postBlobs.length} photo{postBlobs.length === 1 ? '' : 's'} ready ·{' '}
+            {caption.length} characters
+          </div>
+        </aside>
       </div>
     </div>
   )

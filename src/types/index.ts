@@ -1,4 +1,4 @@
-export type AppView = 'studio' | 'gallery' | 'frames' | 'facebook' | 'settings'
+export type AppView = 'home' | 'studio' | 'gallery' | 'frames' | 'facebook' | 'settings'
 
 export type PhotoStatus =
   | 'uploaded'

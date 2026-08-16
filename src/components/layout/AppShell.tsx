@@ -5,6 +5,7 @@ import type { AppView } from '../../types'
 import { ROLE_LABELS } from '../../types/auth'
 
 const NAV: { id: AppView; label: string }[] = [
+  { id: 'home', label: 'Home' },
   { id: 'studio', label: 'Studio' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'facebook', label: 'Facebook' },
@@ -36,21 +37,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-full flex-col bg-navy-950 text-ink-100">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-navy-700 bg-navy-900 px-3">
         <div className="flex items-center gap-2.5 pr-2">
-          <img
-            src="/logo.png"
-            alt="Brigada Onse Sun Valley Fire and Rescue"
-            className="h-10 w-10 object-contain"
-            width={40}
-            height={40}
-          />
-          <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-wide text-ink-50">
-              Brigada Onse SVFAR
+          <button
+            type="button"
+            onClick={() => setView('home')}
+            className="flex items-center gap-2.5 text-left"
+            aria-label="Go to home"
+          >
+            <img
+              src="/logo.png"
+              alt="Brigada Onse Sun Valley Fire and Rescue"
+              className="h-10 w-10 object-contain"
+              width={40}
+              height={40}
+            />
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-wide text-ink-50">
+                Brigada Onse SVFAR
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-500">
+                Studio
+              </div>
             </div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-500">
-              Studio
-            </div>
-          </div>
+          </button>
         </div>
 
         <nav className="flex items-center gap-0.5" aria-label="Primary">
