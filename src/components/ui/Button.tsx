@@ -31,11 +31,12 @@ export function Button({
   className = '',
   children,
   disabled,
+  type = 'button',
   ...props
 }: ButtonProps) {
   return (
     <button
-      type="button"
+      type={type}
       disabled={disabled}
       className={`inline-flex items-center justify-center rounded-md transition-colors disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}

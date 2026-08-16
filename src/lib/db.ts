@@ -6,6 +6,8 @@ import type {
   PersistedSessionMeta,
   PersistedStudioPhoto,
 } from '../types'
+import type { ActivityEntry, AppSettings, StudioUser } from '../types/auth'
+import { DEFAULT_APP_SETTINGS } from '../types/auth'
 
 interface StudioDB extends DBSchema {
   frames: {
@@ -32,35 +34,65 @@ interface StudioDB extends DBSchema {
     value: PersistedStudioPhoto
     indexes: { 'by-session': string }
   }
+  users: {
+    key: string
+    value: StudioUser
+    indexes: { 'by-username': string }
+  }
+  settings: {
+    key: string
+    value: AppSettings
+  }
+  activity: {
+    key: string
+    value: ActivityEntry
+    indexes: { 'by-created': number }
+  }
 }
 
 const DB_NAME = 'onse-studio'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 let dbPromise: Promise<IDBPDatabase<StudioDB>> | null = null
 
 export function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<StudioDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        const frames = db.createObjectStore('frames', { keyPath: 'id' })
-        frames.createIndex('by-created', 'createdAt')
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const frames = db.createObjectStore('frames', { keyPath: 'id' })
+          frames.createIndex('by-created', 'createdAt')
 
-        const albums = db.createObjectStore('albums', { keyPath: 'id' })
-        albums.createIndex('by-created', 'createdAt')
-        albums.createIndex('by-updated', 'updatedAt')
+          const albums = db.createObjectStore('albums', { keyPath: 'id' })
+          albums.createIndex('by-created', 'createdAt')
+          albums.createIndex('by-updated', 'updatedAt')
 
-        const albumPhotos = db.createObjectStore('albumPhotos', {
-          keyPath: 'id',
-        })
-        albumPhotos.createIndex('by-album', 'albumId')
+          const albumPhotos = db.createObjectStore('albumPhotos', {
+            keyPath: 'id',
+          })
+          albumPhotos.createIndex('by-album', 'albumId')
 
-        db.createObjectStore('sessionMeta', { keyPath: 'id' })
+          db.createObjectStore('sessionMeta', { keyPath: 'id' })
 
-        const sessionPhotos = db.createObjectStore('sessionPhotos', {
-          keyPath: 'id',
-        })
-        sessionPhotos.createIndex('by-session', 'sessionId')
+          const sessionPhotos = db.createObjectStore('sessionPhotos', {
+            keyPath: 'id',
+          })
+          sessionPhotos.createIndex('by-session', 'sessionId')
+        }
+
+        if (oldVersion < 2) {
+          if (!db.objectStoreNames.contains('users')) {
+            const users = db.createObjectStore('users', { keyPath: 'id' })
+            users.createIndex('by-username', 'username', { unique: true })
+          }
+          if (!db.objectStoreNames.contains('settings')) {
+            db.createObjectStore('settings', { keyPath: 'id' })
+          }
+          if (!db.objectStoreNames.contains('activity')) {
+            const activity = db.createObjectStore('activity', { keyPath: 'id' })
+            activity.createIndex('by-created', 'createdAt')
+          }
+        }
       },
     })
   }
@@ -185,4 +217,79 @@ export async function clearSession(sessionId: string) {
     tx.objectStore('sessionMeta').delete(sessionId),
     tx.done,
   ])
+}
+
+/* ---------- Users ---------- */
+
+export async function saveUser(user: StudioUser) {
+  const db = await getDb()
+  await db.put('users', user)
+}
+
+export async function listUsers(): Promise<StudioUser[]> {
+  const db = await getDb()
+  const users = await db.getAll('users')
+  return users.sort((a, b) => a.username.localeCompare(b.username))
+}
+
+export async function getUser(id: string) {
+  const db = await getDb()
+  return db.get('users', id)
+}
+
+export async function getUserByUsername(username: string) {
+  const db = await getDb()
+  return db.getFromIndex('users', 'by-username', username.toLowerCase())
+}
+
+export async function deleteUser(id: string) {
+  const db = await getDb()
+  await db.delete('users', id)
+}
+
+export async function countUsers() {
+  const db = await getDb()
+  return db.count('users')
+}
+
+/* ---------- Settings ---------- */
+
+export async function getAppSettings(): Promise<AppSettings> {
+  const db = await getDb()
+  const existing = await db.get('settings', 'app')
+  if (existing) {
+    return {
+      ...DEFAULT_APP_SETTINGS,
+      ...existing,
+      facebook: {
+        ...DEFAULT_APP_SETTINGS.facebook,
+        ...existing.facebook,
+      },
+    }
+  }
+  await db.put('settings', DEFAULT_APP_SETTINGS)
+  return { ...DEFAULT_APP_SETTINGS, facebook: { ...DEFAULT_APP_SETTINGS.facebook } }
+}
+
+export async function saveAppSettings(settings: AppSettings) {
+  const db = await getDb()
+  await db.put('settings', { ...settings, id: 'app', updatedAt: Date.now() })
+}
+
+/* ---------- Activity ---------- */
+
+export async function addActivity(entry: ActivityEntry) {
+  const db = await getDb()
+  await db.put('activity', entry)
+  const all = await db.getAllFromIndex('activity', 'by-created')
+  if (all.length > 200) {
+    const oldest = all.slice(0, all.length - 200)
+    await Promise.all(oldest.map((e) => db.delete('activity', e.id)))
+  }
+}
+
+export async function listActivity(limit = 40): Promise<ActivityEntry[]> {
+  const db = await getDb()
+  const all = await db.getAllFromIndex('activity', 'by-created')
+  return all.reverse().slice(0, limit)
 }

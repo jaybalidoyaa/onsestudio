@@ -1,6 +1,8 @@
 import { useStudio } from '../../store/StudioContext'
+import { useAuth } from '../../store/AuthContext'
 import { Button } from '../ui/Button'
 import type { AppView } from '../../types'
+import { ROLE_LABELS } from '../../types/auth'
 
 const NAV: { id: AppView; label: string }[] = [
   { id: 'studio', label: 'Studio' },
@@ -24,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     processing,
     createAlbumFromSession,
   } = useStudio()
+  const { user, logout, canEdit, isAdmin } = useAuth()
 
   const processed = session.photos.filter((p) => p.status === 'processed').length
   const selected = session.photos.filter((p) => p.selected).length
@@ -50,25 +53,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex items-center gap-0.5" aria-label="Primary">
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setView(item.id)}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                view === item.id
-                  ? 'bg-navy-700 text-gold-500'
-                  : 'text-ink-300 hover:bg-navy-800 hover:text-ink-100'
-              }`}
-              aria-current={view === item.id ? 'page' : undefined}
-            >
-              {item.label}
-            </button>
-          ))}
+          {NAV.map((item) => {
+            if ((item.id === 'studio' || item.id === 'frames') && !canEdit) {
+              return null
+            }
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setView(item.id)}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
+                  view === item.id
+                    ? 'bg-navy-700 text-gold-500'
+                    : 'text-ink-300 hover:bg-navy-800 hover:text-ink-100'
+                }`}
+                aria-current={view === item.id ? 'page' : undefined}
+              >
+                {item.label}
+              </button>
+            )
+          })}
         </nav>
 
         <div className="ml-auto flex items-center gap-1.5">
-          {view === 'studio' ? (
+          {view === 'studio' && canEdit ? (
             <>
               <Button size="sm" variant="ghost" onClick={() => void newSession()}>
                 New
@@ -76,14 +84,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => document.getElementById('photo-file-input')?.click()}
+                onClick={() =>
+                  document.getElementById('photo-file-input')?.click()
+                }
               >
                 Open
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => void saveSession()}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void saveSession()}
+              >
                 Save
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => void exportSelected()}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => void exportSelected()}
+              >
                 Export
               </Button>
               {processed > 0 ? (
@@ -106,6 +124,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Button>
             </>
           ) : null}
+
+          <div className="ml-1 hidden items-center gap-2 border-l border-navy-700 pl-2 sm:flex">
+            <div className="text-right leading-tight">
+              <div className="text-xs font-medium text-ink-100">
+                {user?.displayName}
+              </div>
+              <div className="text-[10px] uppercase tracking-wide text-ink-400">
+                {user ? ROLE_LABELS[user.role] : ''}
+                {isAdmin ? '' : ''}
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={logout}>
+              Sign out
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="sm:hidden"
+            onClick={logout}
+          >
+            Out
+          </Button>
         </div>
       </header>
 
@@ -113,7 +154,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="flex h-10 shrink-0 items-center gap-4 border-t border-navy-700 bg-navy-900 px-3 text-xs text-ink-300">
         <span>
-          <strong className="text-ink-100">{session.photos.length}</strong> Photos
+          <strong className="text-ink-100">{session.photos.length}</strong>{' '}
+          Photos
         </span>
         <span>
           <strong className="text-ink-100">{selected}</strong> Selected
@@ -144,7 +186,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-live="polite"
         >
           <div className="mt-3 rounded-md border border-gold-500/40 bg-navy-900/95 px-4 py-2 text-sm text-ink-50 shadow-lg backdrop-blur">
-            <div className="mb-1 font-medium text-gold-500">{processing.message}</div>
+            <div className="mb-1 font-medium text-gold-500">
+              {processing.message}
+            </div>
             <div className="h-1.5 w-56 overflow-hidden rounded bg-navy-700">
               <div
                 className="h-full bg-gold-500 transition-all"

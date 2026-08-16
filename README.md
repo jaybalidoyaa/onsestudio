@@ -6,18 +6,31 @@ archival.
 
 made with love by finest 12
 
+## Access
+
+The Studio is **private**. First launch creates an administrator account. Only
+signed-in users can use the app.
+
+Roles:
+
+- **Administrator** — users, Facebook settings, full Studio access
+- **Documentation Officer** — process photos, frames, albums, Facebook posts
+- **Viewer** — Gallery browse / download only
+
 ## Features
 
-- **Studio** — upload photos, enter incident metadata, apply a user-provided frame overlay, preview, and export
-- **User frames** — upload PNG/JPG/WEBP/SVG overlays; reusable frame library (IndexedDB)
-- **Gallery** — completed documentation albums with search, filters, viewer, and ZIP download
-- **Fixed output** — processed photos render at **940 × 788 px**
-- **Non-destructive** — originals preserved separately from processed outputs
-- **Local-first** — sessions, frames, and albums stored in the browser
+- **Studio** — upload photos, metadata, user frame overlays, preview, export
+- **Gallery** — albums with search, filters, viewer, ZIP download
+- **Facebook Page posting** — compose caption + photos and publish via Graph API
+- **Fixed output** — processed photos at **940 × 788 px**
+- **Local-first** — IndexedDB for users, sessions, frames, albums, settings
 
-## Stack
+## Facebook setup
 
-React · TypeScript · Vite · Tailwind CSS · IndexedDB · JSZip
+1. Create a Meta developer app
+2. Generate a **Page Access Token** with `pages_manage_posts` (and photo upload)
+3. In Studio → Settings → Facebook, paste **Page ID** and token
+4. Use **Test Connection**, then post from any album via **Post to Facebook**
 
 ## Develop
 
@@ -32,13 +45,3 @@ npm run dev
 npm run build
 npm run preview
 ```
-
-## Workflow
-
-1. Open **Studio**
-2. Upload incident photographs
-3. Enter event details
-4. Upload your documentation frame (PNG with transparency recommended)
-5. Preview → **Apply to All**
-6. **Create Album** → opens in **Gallery**
-7. Download individual photos or the full album ZIP

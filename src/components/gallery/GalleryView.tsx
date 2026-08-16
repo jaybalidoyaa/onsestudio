@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStudio } from '../../store/StudioContext'
+import { useAuth } from '../../store/AuthContext'
 import {
   formatDisplayDate,
   formatDisplayTime,
@@ -8,6 +9,7 @@ import {
 import { INCIDENT_TYPES, type Album, type AlbumPhoto, type IncidentType } from '../../types'
 import { Button } from '../ui/Button'
 import { Field, Input, Select, Textarea, StatusBadge } from '../ui/Panel'
+import { FacebookPostModal } from '../facebook/FacebookPostModal'
 
 export function GalleryView() {
   const {
@@ -225,11 +227,13 @@ function AlbumDetail({
     deleteAlbumPhoto,
   } = useStudio()
 
+  const { canEdit } = useAuth()
   const album = albums.find((a) => a.id === albumId)
   const photos = albumPhotos[albumId] ?? []
   const [editing, setEditing] = useState(false)
   const [viewerId, setViewerId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Partial<Album>>({})
+  const [facebookOpen, setFacebookOpen] = useState(false)
   const addInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -278,22 +282,34 @@ function AlbumDetail({
             ) : null}
           </div>
           <div className="flex flex-wrap gap-1.5">
+            {canEdit ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setDraft(album)
+                    setEditing(true)
+                  }}
+                >
+                  Edit Details
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => addInputRef.current?.click()}
+                >
+                  Add Photos
+                </Button>
+              </>
+            ) : null}
             <Button
               size="sm"
-              variant="secondary"
-              onClick={() => {
-                setDraft(album)
-                setEditing(true)
-              }}
+              variant="gold"
+              onClick={() => setFacebookOpen(true)}
+              disabled={!photos.length}
             >
-              Edit Details
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => addInputRef.current?.click()}
-            >
-              Add Photos
+              Post to Facebook
             </Button>
             <Button
               size="sm"
@@ -302,18 +318,20 @@ function AlbumDetail({
             >
               Download Album
             </Button>
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => {
-                if (confirm('Delete this album and all of its photographs?')) {
-                  void deleteAlbum(albumId)
-                  onBack()
-                }
-              }}
-            >
-              Delete
-            </Button>
+            {canEdit ? (
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => {
+                  if (confirm('Delete this album and all of its photographs?')) {
+                    void deleteAlbum(albumId)
+                    onBack()
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            ) : null}
           </div>
         </div>
         <input
@@ -380,6 +398,7 @@ function AlbumDetail({
           photo={viewer}
           index={viewerIndex}
           total={photos.length}
+          canDelete={canEdit}
           onClose={() => setViewerId(null)}
           onPrev={() => setViewerId(photos[Math.max(0, viewerIndex - 1)].id)}
           onNext={() =>
@@ -390,6 +409,14 @@ function AlbumDetail({
             void deleteAlbumPhoto(albumId, viewer.id)
             setViewerId(null)
           }}
+        />
+      ) : null}
+
+      {facebookOpen ? (
+        <FacebookPostModal
+          album={album}
+          photos={photos}
+          onClose={() => setFacebookOpen(false)}
         />
       ) : null}
     </div>
@@ -518,6 +545,7 @@ function AlbumViewer({
   photo,
   index,
   total,
+  canDelete,
   onClose,
   onPrev,
   onNext,
@@ -527,6 +555,7 @@ function AlbumViewer({
   photo: AlbumPhoto
   index: number
   total: number
+  canDelete: boolean
   onClose: () => void
   onPrev: () => void
   onNext: () => void
@@ -567,9 +596,11 @@ function AlbumViewer({
           <Button size="sm" variant="secondary" onClick={onDownload}>
             Download
           </Button>
-          <Button size="sm" variant="danger" onClick={onDelete}>
-            Delete
-          </Button>
+          {canDelete ? (
+            <Button size="sm" variant="danger" onClick={onDelete}>
+              Delete
+            </Button>
+          ) : null}
           <Button size="sm" variant="ghost" onClick={onClose}>
             Close
           </Button>
