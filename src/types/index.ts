@@ -1,4 +1,4 @@
-export type AppView = 'studio' | 'gallery' | 'frames' | 'settings'
+export type AppView = 'studio' | 'gallery' | 'frames' | 'facebook' | 'settings'
 
 export type PhotoStatus =
   | 'uploaded'
@@ -51,16 +51,20 @@ export interface PhotoAdjustments {
 }
 
 export interface IncidentMetadata {
+  /** Headline used in albums / exports */
   title: string
-  incidentType: IncidentType
+  /** Incident date (YYYY-MM-DD) */
   date: string
+  /** Full address / location for Facebook post */
+  address: string
+  /** Alarm level, e.g. "10-70 1st Alarm" */
+  alarm: string
+  /** Responding unit, e.g. "Sun Valley Engine" */
+  unit: string
+  /** Responding personnel / callsign, e.g. "Finest 12" */
+  callsign: string
   time: string
-  location: string
-  barangay: string
-  city: string
-  respondingUnits: string
-  documentationOfficer: string
-  notes: string
+  incidentType: IncidentType
 }
 
 export interface FrameConfig {
@@ -147,6 +151,10 @@ export interface Album {
   date: string
   time: string
   location: string
+  address: string
+  alarm: string
+  unit: string
+  callsign: string
   barangay: string
   city: string
   respondingUnits: string
@@ -248,15 +256,42 @@ export function createDefaultMetadata(): IncidentMetadata {
   const date = now.toISOString().slice(0, 10)
   const time = now.toTimeString().slice(0, 5)
   return {
-    title: '',
+    title: 'FIRE RESPONSE OPERATION',
     incidentType: 'Fire Incident',
     date,
     time,
-    location: '',
-    barangay: '',
-    city: '',
-    respondingUnits: '',
-    documentationOfficer: '',
-    notes: '',
+    address: '',
+    alarm: '',
+    unit: '',
+    callsign: '',
+  }
+}
+
+/** Normalize older saved metadata / albums into the current shape. */
+export function normalizeMetadata(
+  raw: Partial<IncidentMetadata> | (Partial<IncidentMetadata> & Record<string, unknown>),
+): IncidentMetadata {
+  const defaults = createDefaultMetadata()
+  const record = raw as Partial<IncidentMetadata> & Record<string, unknown>
+  const address =
+    (record.address as string) ||
+    (record.location as string) ||
+    defaults.address
+  return {
+    title: (record.title as string) || defaults.title,
+    incidentType:
+      (record.incidentType as IncidentType) || defaults.incidentType,
+    date: (record.date as string) || defaults.date,
+    time: (record.time as string) || defaults.time,
+    address,
+    alarm: (record.alarm as string) || '',
+    unit:
+      (record.unit as string) ||
+      (record.respondingUnits as string) ||
+      '',
+    callsign:
+      (record.callsign as string) ||
+      (record.documentationOfficer as string) ||
+      '',
   }
 }

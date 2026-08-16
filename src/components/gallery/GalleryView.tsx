@@ -9,7 +9,6 @@ import {
 import { INCIDENT_TYPES, type Album, type AlbumPhoto, type IncidentType } from '../../types'
 import { Button } from '../ui/Button'
 import { Field, Input, Select, Textarea, StatusBadge } from '../ui/Panel'
-import { FacebookPostModal } from '../facebook/FacebookPostModal'
 
 export function GalleryView() {
   const {
@@ -225,6 +224,7 @@ function AlbumDetail({
     downloadAlbum,
     downloadAlbumPhoto,
     deleteAlbumPhoto,
+    setView,
   } = useStudio()
 
   const { canEdit } = useAuth()
@@ -233,7 +233,6 @@ function AlbumDetail({
   const [editing, setEditing] = useState(false)
   const [viewerId, setViewerId] = useState<string | null>(null)
   const [draft, setDraft] = useState<Partial<Album>>({})
-  const [facebookOpen, setFacebookOpen] = useState(false)
   const addInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -264,21 +263,27 @@ function AlbumDetail({
           <div>
             <h1 className="text-xl font-semibold text-ink-50">{album.title}</h1>
             <p className="text-sm text-ink-300">
-              {[album.location, album.barangay, album.city]
-                .filter(Boolean)
-                .join(', ')}
+              {album.address ||
+                [album.location, album.barangay, album.city]
+                  .filter(Boolean)
+                  .join(', ')}
             </p>
             <p className="text-sm text-ink-400">
               {formatDisplayDate(album.date)} · {formatDisplayTime(album.time)} ·{' '}
               {album.photoCount} Photos
             </p>
-            {album.respondingUnits ? (
+            {album.alarm ? (
+              <p className="mt-1 text-xs text-ink-300">Alarm: {album.alarm}</p>
+            ) : null}
+            {album.unit || album.respondingUnits ? (
               <p className="mt-1 text-xs text-ink-300">
-                Responding: {album.respondingUnits}
+                Responding: {album.unit || album.respondingUnits}
               </p>
             ) : null}
-            {album.frameName ? (
-              <p className="text-xs text-ink-400">Frame: {album.frameName}</p>
+            {album.callsign || album.documentationOfficer ? (
+              <p className="text-xs text-ink-300">
+                Personnel: {album.callsign || album.documentationOfficer}
+              </p>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -306,7 +311,7 @@ function AlbumDetail({
             <Button
               size="sm"
               variant="gold"
-              onClick={() => setFacebookOpen(true)}
+              onClick={() => setView('facebook')}
               disabled={!photos.length}
             >
               Post to Facebook
@@ -411,14 +416,6 @@ function AlbumDetail({
           }}
         />
       ) : null}
-
-      {facebookOpen ? (
-        <FacebookPostModal
-          album={album}
-          photos={photos}
-          onClose={() => setFacebookOpen(false)}
-        />
-      ) : null}
     </div>
   )
 }
@@ -447,7 +444,66 @@ function EditAlbumModal({
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             />
           </Field>
-          <Field label="Incident Type">
+          <Field label="Date">
+            <Input
+              type="date"
+              value={draft.date ?? ''}
+              onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+            />
+          </Field>
+          <Field label="Location / Address">
+            <Input
+              value={draft.address || draft.location || ''}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  address: e.target.value,
+                  location: e.target.value,
+                })
+              }
+            />
+          </Field>
+          <Field label="Incident Type / Alarm">
+            <Input
+              value={draft.alarm ?? ''}
+              onChange={(e) => setDraft({ ...draft, alarm: e.target.value })}
+              placeholder="10-70 1st Alarm"
+            />
+          </Field>
+          <Field label="Responding Unit">
+            <Input
+              value={draft.unit || draft.respondingUnits || ''}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  unit: e.target.value,
+                  respondingUnits: e.target.value,
+                })
+              }
+              placeholder="Sun Valley Engine"
+            />
+          </Field>
+          <Field label="Responding Personnel / Callsign">
+            <Input
+              value={draft.callsign || draft.documentationOfficer || ''}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  callsign: e.target.value,
+                  documentationOfficer: e.target.value,
+                })
+              }
+              placeholder="Finest 12"
+            />
+          </Field>
+          <Field label="Time">
+            <Input
+              type="time"
+              value={draft.time ?? ''}
+              onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+            />
+          </Field>
+          <Field label="Gallery category">
             <Select
               value={draft.incidentType}
               onChange={(e) =>
@@ -464,64 +520,7 @@ function EditAlbumModal({
               ))}
             </Select>
           </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Date">
-              <Input
-                type="date"
-                value={draft.date ?? ''}
-                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
-              />
-            </Field>
-            <Field label="Time">
-              <Input
-                type="time"
-                value={draft.time ?? ''}
-                onChange={(e) => setDraft({ ...draft, time: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Location">
-            <Input
-              value={draft.location ?? ''}
-              onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Barangay">
-              <Input
-                value={draft.barangay ?? ''}
-                onChange={(e) =>
-                  setDraft({ ...draft, barangay: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="City">
-              <Input
-                value={draft.city ?? ''}
-                onChange={(e) => setDraft({ ...draft, city: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Responding Unit">
-            <Input
-              value={draft.respondingUnits ?? ''}
-              onChange={(e) =>
-                setDraft({ ...draft, respondingUnits: e.target.value })
-              }
-            />
-          </Field>
-          <Field label="Documentation Officer">
-            <Input
-              value={draft.documentationOfficer ?? ''}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  documentationOfficer: e.target.value,
-                })
-              }
-            />
-          </Field>
-          <Field label="Description / Notes">
+          <Field label="Notes">
             <Textarea
               value={draft.notes ?? ''}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}

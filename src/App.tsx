@@ -6,6 +6,7 @@ import { AuthGate } from './components/auth/AuthGate'
 import { StudioView } from './components/studio/StudioView'
 import { GalleryView } from './components/gallery/GalleryView'
 import { FramesView } from './components/frames/FramesView'
+import { FacebookView } from './components/facebook/FacebookView'
 import { SettingsView } from './components/settings/SettingsView'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
@@ -32,6 +33,7 @@ function AppRoutes() {
     <AppShell>
       {view === 'studio' && canEdit ? <StudioView /> : null}
       {view === 'gallery' ? <GalleryView /> : null}
+      {view === 'facebook' ? <FacebookView /> : null}
       {view === 'frames' && canEdit ? <FramesView /> : null}
       {view === 'settings' ? <SettingsView /> : null}
     </AppShell>

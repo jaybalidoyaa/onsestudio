@@ -7,6 +7,7 @@ import { ROLE_LABELS } from '../../types/auth'
 const NAV: { id: AppView; label: string }[] = [
   { id: 'studio', label: 'Studio' },
   { id: 'gallery', label: 'Gallery' },
+  { id: 'facebook', label: 'Facebook' },
   { id: 'frames', label: 'Frames' },
   { id: 'settings', label: 'Settings' },
 ]

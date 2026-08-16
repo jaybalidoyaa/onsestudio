@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStudio } from '../../store/StudioContext'
-import { INCIDENT_TYPES } from '../../types'
 import { Button } from '../ui/Button'
-import { Field, Input, Panel, Select, Textarea, StatusBadge } from '../ui/Panel'
+import { Field, Input, Panel, Select, StatusBadge } from '../ui/Panel'
 
 export function StudioPanel() {
   const {
@@ -35,89 +34,50 @@ export function StudioPanel() {
   const panel = (
     <div className="flex h-full w-full flex-col gap-3 overflow-y-auto p-3">
       <Panel title="Event Information">
+        <p className="mb-3 text-[11px] text-ink-400">
+          These fields fill the official Facebook incident caption when you post.
+        </p>
         <div className="flex flex-col gap-3">
-          <Field label="Event / Incident Title">
+          <Field label="Date">
             <Input
-              value={session.metadata.title}
-              onChange={(e) => updateMetadata({ title: e.target.value })}
-              placeholder="STRUCTURE FIRE INCIDENT"
+              type="date"
+              value={session.metadata.date}
+              onChange={(e) => updateMetadata({ date: e.target.value })}
             />
           </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Date">
-              <Input
-                type="date"
-                value={session.metadata.date}
-                onChange={(e) => updateMetadata({ date: e.target.value })}
-              />
-            </Field>
-            <Field label="Time">
-              <Input
-                type="time"
-                value={session.metadata.time}
-                onChange={(e) => updateMetadata({ time: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Incident Type">
-            <Select
-              value={session.metadata.incidentType}
-              onChange={(e) =>
-                updateMetadata({
-                  incidentType: e.target.value as (typeof INCIDENT_TYPES)[number],
-                })
-              }
-            >
-              {INCIDENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Location">
+          <Field label="Location / Address">
             <Input
-              value={session.metadata.location}
-              onChange={(e) => updateMetadata({ location: e.target.value })}
-              placeholder="Sun Valley Park"
+              value={session.metadata.address}
+              onChange={(e) => updateMetadata({ address: e.target.value })}
+              placeholder="Sun Valley, Parañaque City"
             />
           </Field>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Barangay">
-              <Input
-                value={session.metadata.barangay}
-                onChange={(e) => updateMetadata({ barangay: e.target.value })}
-              />
-            </Field>
-            <Field label="City / Municipality">
-              <Input
-                value={session.metadata.city}
-                onChange={(e) => updateMetadata({ city: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Responding Unit">
+          <Field label="Incident Type / Alarm" hint='Example: 10-70 1st Alarm'>
             <Input
-              value={session.metadata.respondingUnits}
-              onChange={(e) =>
-                updateMetadata({ respondingUnits: e.target.value })
-              }
+              value={session.metadata.alarm}
+              onChange={(e) => updateMetadata({ alarm: e.target.value })}
+              placeholder="10-70 1st Alarm"
+            />
+          </Field>
+          <Field label="Responding Unit" hint="Example: Sun Valley Engine">
+            <Input
+              value={session.metadata.unit}
+              onChange={(e) => updateMetadata({ unit: e.target.value })}
               placeholder="Sun Valley Engine"
             />
           </Field>
-          <Field label="Documentation Officer">
+          <Field label="Responding Personnel / Callsign" hint="Example: Finest 12">
             <Input
-              value={session.metadata.documentationOfficer}
-              onChange={(e) =>
-                updateMetadata({ documentationOfficer: e.target.value })
-              }
+              value={session.metadata.callsign}
+              onChange={(e) => updateMetadata({ callsign: e.target.value })}
+              placeholder="Finest 12"
             />
           </Field>
-          <Field label="Notes">
-            <Textarea
-              value={session.metadata.notes}
-              onChange={(e) => updateMetadata({ notes: e.target.value })}
-              rows={2}
+          <Field label="Time (optional)">
+            <Input
+              type="time"
+              value={session.metadata.time}
+              onChange={(e) => updateMetadata({ time: e.target.value })}
             />
           </Field>
         </div>

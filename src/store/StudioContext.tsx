@@ -23,6 +23,7 @@ import { exportPhotosAsZip, exportSinglePhoto } from '../lib/export'
 import { createId, isSupportedFrameType, isSupportedPhotoType } from '../lib/utils'
 import {
   createDefaultMetadata,
+  normalizeMetadata,
   DEFAULT_ADJUSTMENTS,
   DEFAULT_EXPORT_SETTINGS,
   DEFAULT_FRAME_CONFIG,
@@ -256,7 +257,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
             id: latest.id,
             createdAt: latest.createdAt,
             updatedAt: latest.updatedAt,
-            metadata: latest.metadata,
+            metadata: normalizeMetadata(
+              latest.metadata as Partial<IncidentMetadata>,
+            ),
             photos,
             activePhotoId: latest.activePhotoId ?? photos[0]?.id ?? null,
             activeFrameId: latest.activeFrameId,
@@ -818,16 +821,20 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     const now = Date.now()
     const album: Album = {
       id: albumId,
-      title: s.metadata.title || 'Untitled Incident',
+      title: s.metadata.title || 'FIRE RESPONSE OPERATION',
       incidentType: s.metadata.incidentType,
       date: s.metadata.date,
       time: s.metadata.time,
-      location: s.metadata.location,
-      barangay: s.metadata.barangay,
-      city: s.metadata.city,
-      respondingUnits: s.metadata.respondingUnits,
-      documentationOfficer: s.metadata.documentationOfficer,
-      notes: s.metadata.notes,
+      location: s.metadata.address,
+      address: s.metadata.address,
+      alarm: s.metadata.alarm,
+      unit: s.metadata.unit,
+      callsign: s.metadata.callsign,
+      barangay: '',
+      city: '',
+      respondingUnits: s.metadata.unit,
+      documentationOfficer: s.metadata.callsign,
+      notes: '',
       frameId: frame?.id ?? null,
       frameName: frame?.name ?? 'None',
       coverPhotoId: null,
@@ -1081,7 +1088,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         photos.map((p, index) => ({ blob: p.processedBlob, index })),
         {
           title: album.title,
-          location: album.location,
+          location: album.location || album.address,
+          address: album.address || album.location,
           date: album.date,
         },
       )
@@ -1098,7 +1106,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       if (!photo || !album) return
       await exportSinglePhoto(photo.processedBlob, photo.order, {
         title: album.title,
-        location: album.location,
+        location: album.location || album.address,
+        address: album.address || album.location,
         date: album.date,
       })
     },

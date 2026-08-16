@@ -47,13 +47,13 @@ export function formatDisplayTime(time: string): string {
 
 export function buildExportFilename(
   index: number,
-  metadata: { title: string; location: string; date: string },
+  metadata: { title: string; location?: string; address?: string; date: string },
   ext: string,
 ): string {
   const parts = [
     padPhotoNumber(index),
     slugify(metadata.title || 'photo'),
-    slugify(metadata.location || ''),
+    slugify(metadata.address || metadata.location || ''),
     metadata.date || '',
   ].filter(Boolean)
   return `${parts.join('_')}.${ext}`
