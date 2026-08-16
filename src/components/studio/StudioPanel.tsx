@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { useStudio } from '../../store/StudioContext'
+import { ALARM_TYPES, CALLSIGN_ROSTER, RESPONDING_UNITS } from '../../lib/rosters'
 import { Button } from '../ui/Button'
 import { Field, Input, Panel, Select, StatusBadge } from '../ui/Panel'
+import { MultiSelect } from '../ui/MultiSelect'
 
 export function StudioPanel() {
   const {
@@ -36,6 +38,7 @@ export function StudioPanel() {
       <Panel title="Event Information">
         <p className="mb-3 text-[11px] text-ink-400">
           These fields fill the official Facebook incident caption when you post.
+          Units and callsigns support multiple selections.
         </p>
         <div className="flex flex-col gap-3">
           <Field label="Date">
@@ -52,25 +55,51 @@ export function StudioPanel() {
               placeholder="Sun Valley, Parañaque City"
             />
           </Field>
-          <Field label="Incident Type / Alarm" hint='Example: 10-70 1st Alarm'>
-            <Input
-              value={session.metadata.alarm}
+          <Field label="Incident Type / Alarm">
+            <Select
+              value={
+                (ALARM_TYPES as readonly string[]).includes(
+                  session.metadata.alarm,
+                )
+                  ? session.metadata.alarm
+                  : ''
+              }
               onChange={(e) => updateMetadata({ alarm: e.target.value })}
-              placeholder="10-70 1st Alarm"
-            />
+            >
+              <option value="">Select alarm / incident type…</option>
+              {ALARM_TYPES.map((alarm) => (
+                <option key={alarm} value={alarm}>
+                  {alarm}
+                </option>
+              ))}
+            </Select>
+            {session.metadata.alarm &&
+            !(ALARM_TYPES as readonly string[]).includes(
+              session.metadata.alarm,
+            ) ? (
+              <p className="mt-1 text-[10px] text-warn-500">
+                Custom value: {session.metadata.alarm}
+              </p>
+            ) : null}
           </Field>
-          <Field label="Responding Unit" hint="Example: Sun Valley Engine">
-            <Input
+          <Field label="Responding Unit">
+            <MultiSelect
+              options={RESPONDING_UNITS}
               value={session.metadata.unit}
-              onChange={(e) => updateMetadata({ unit: e.target.value })}
-              placeholder="Sun Valley Engine"
+              onChange={(unit) => updateMetadata({ unit })}
+              placeholder="Select one or more units…"
+              searchable={false}
+              maxVisible={6}
             />
           </Field>
-          <Field label="Responding Personnel / Callsign" hint="Example: Finest 12">
-            <Input
+          <Field label="Responding Personnel / Callsign">
+            <MultiSelect
+              options={CALLSIGN_ROSTER}
               value={session.metadata.callsign}
-              onChange={(e) => updateMetadata({ callsign: e.target.value })}
-              placeholder="Finest 12"
+              onChange={(callsign) => updateMetadata({ callsign })}
+              placeholder="Select callsigns (Alpha, Bravo, SV 01–99, Finest 01–13)…"
+              searchable
+              maxVisible={8}
             />
           </Field>
           <Field label="Time (optional)">

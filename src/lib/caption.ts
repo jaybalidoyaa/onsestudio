@@ -1,5 +1,6 @@
 import type { Album, IncidentMetadata } from '../types'
 import { normalizeMetadata } from '../types'
+import { parseMultiValue } from './rosters'
 import { formatDisplayDate } from './utils'
 
 export type CaptionSource = {
@@ -36,16 +37,37 @@ export function captionSourceFromAlbum(album: Album): CaptionSource {
 /** Firefighter emoji (person + fire engine ZWJ sequence) */
 const FF = '\u{1F9D1}\u{200D}\u{1F692}'
 
+function formatUnitBlock(unitField: string): string[] {
+  const units = parseMultiValue(unitField)
+  if (!units.length) return ['{unit}']
+  return units
+}
+
+function formatCallsignBlock(callsignField: string): string[] {
+  const signs = parseMultiValue(callsignField)
+  if (!signs.length) return [`${FF}{callsign}`]
+  return signs.map((s) => `${FF}${s}`)
+}
+
+function formatUnitNarrative(unitField: string): string {
+  const units = parseMultiValue(unitField)
+  if (!units.length) return '{unit}'
+  if (units.length === 1) return units[0]
+  if (units.length === 2) return `${units[0]} and ${units[1]}`
+  return `${units.slice(0, -1).join(', ')}, and ${units[units.length - 1]}`
+}
+
 /**
  * Official Brigada Onse SVFAR Facebook incident caption template.
- * Fills {date} {address} {alarm} {unit} {callsign} from Event Information.
+ * Supports multiple units and callsigns from Event Information.
  */
 export function buildFacebookCaption(source: CaptionSource): string {
   const date = source.date ? formatDisplayDate(source.date) : '{date}'
   const address = source.address.trim() || '{address}'
   const alarm = source.alarm.trim() || '{alarm}'
-  const unit = source.unit.trim() || '{unit}'
-  const callsign = source.callsign.trim() || '{callsign}'
+  const unitLines = formatUnitBlock(source.unit)
+  const callsignLines = formatCallsignBlock(source.callsign)
+  const unitNarrative = formatUnitNarrative(source.unit)
 
   return [
     '🔥 𝗙𝗜𝗥𝗘 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘 𝗢𝗣𝗘𝗥𝗔𝗧𝗜𝗢𝗡',
@@ -56,13 +78,13 @@ export function buildFacebookCaption(source: CaptionSource): string {
     `Incident Type: ${alarm}`,
     ' ',
     '🚒𝗥𝗘𝗦𝗣𝗢𝗡𝗗𝗜𝗡𝗚 𝗨𝗡𝗜𝗧',
-    unit,
+    ...unitLines,
     '',
     `${FF}𝗥𝗘𝗦𝗣𝗢𝗡𝗗𝗜𝗡𝗚 𝗣𝗘𝗥𝗦𝗢𝗡𝗡𝗘𝗟`,
-    `${FF}${callsign}`,
+    ...callsignLines,
     '',
     '',
-    `The ${unit} of Brigada Onse Sun Valley Fire and Rescue Volunteer Group, Inc. responded to a reported 10-70 fire incident under ${alarm} at ${address}.`,
+    `The ${unitNarrative} of Brigada Onse Sun Valley Fire and Rescue Volunteer Group, Inc. responded to a reported incident under ${alarm} at ${address}.`,
     '',
     'Responding personnel were deployed to provide the appropriate fire and rescue support and to assist in maintaining the safety of the affected area and surrounding community.',
     '',

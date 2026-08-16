@@ -6,9 +6,15 @@ import {
   formatDisplayTime,
   padPhotoNumber,
 } from '../../lib/utils'
+import {
+  ALARM_TYPES,
+  CALLSIGN_ROSTER,
+  RESPONDING_UNITS,
+} from '../../lib/rosters'
 import { INCIDENT_TYPES, type Album, type AlbumPhoto, type IncidentType } from '../../types'
 import { Button } from '../ui/Button'
 import { Field, Input, Select, Textarea, StatusBadge } from '../ui/Panel'
+import { MultiSelect } from '../ui/MultiSelect'
 
 export function GalleryView() {
   const {
@@ -464,36 +470,52 @@ function EditAlbumModal({
             />
           </Field>
           <Field label="Incident Type / Alarm">
-            <Input
-              value={draft.alarm ?? ''}
+            <Select
+              value={
+                (ALARM_TYPES as readonly string[]).includes(draft.alarm ?? '')
+                  ? draft.alarm
+                  : ''
+              }
               onChange={(e) => setDraft({ ...draft, alarm: e.target.value })}
-              placeholder="10-70 1st Alarm"
-            />
+            >
+              <option value="">Select alarm / incident type…</option>
+              {ALARM_TYPES.map((alarm) => (
+                <option key={alarm} value={alarm}>
+                  {alarm}
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label="Responding Unit">
-            <Input
+            <MultiSelect
+              options={RESPONDING_UNITS}
               value={draft.unit || draft.respondingUnits || ''}
-              onChange={(e) =>
+              onChange={(unit) =>
                 setDraft({
                   ...draft,
-                  unit: e.target.value,
-                  respondingUnits: e.target.value,
+                  unit,
+                  respondingUnits: unit,
                 })
               }
-              placeholder="Sun Valley Engine"
+              placeholder="Select one or more units…"
+              searchable={false}
+              maxVisible={6}
             />
           </Field>
           <Field label="Responding Personnel / Callsign">
-            <Input
+            <MultiSelect
+              options={CALLSIGN_ROSTER}
               value={draft.callsign || draft.documentationOfficer || ''}
-              onChange={(e) =>
+              onChange={(callsign) =>
                 setDraft({
                   ...draft,
-                  callsign: e.target.value,
-                  documentationOfficer: e.target.value,
+                  callsign,
+                  documentationOfficer: callsign,
                 })
               }
-              placeholder="Finest 12"
+              placeholder="Select callsigns…"
+              searchable
+              maxVisible={8}
             />
           </Field>
           <Field label="Time">
