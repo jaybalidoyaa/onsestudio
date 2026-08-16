@@ -3,6 +3,7 @@ import {
   buildFacebookCaption,
   captionSourceFromAlbum,
   captionSourceFromMetadata,
+  isMedicalIncident,
   type CaptionSource,
 } from '../../lib/caption'
 import { postPhotosToFacebookPage } from '../../lib/facebook'
@@ -15,7 +16,7 @@ import {
 import { createDefaultMetadata } from '../../types'
 import { useAuth } from '../../store/AuthContext'
 import { useStudio } from '../../store/StudioContext'
-import { formatDisplayDate } from '../../lib/utils'
+import { formatDisplayDate, formatDisplayTime } from '../../lib/utils'
 import { Button } from '../ui/Button'
 import { Field, Input, Select, Textarea } from '../ui/Panel'
 import { MultiSelect } from '../ui/MultiSelect'
@@ -43,6 +44,7 @@ export function FacebookView() {
     const d = createDefaultMetadata()
     return {
       date: d.date,
+      time: d.time,
       address: '',
       alarm: '',
       unit: '',
@@ -222,10 +224,15 @@ export function FacebookView() {
     mode === 'blank'
       ? [
           ['Date', blank.date ? formatDisplayDate(blank.date) : '—'],
+          ['Time', blank.time ? formatDisplayTime(blank.time) : '—'],
           ['Address', blank.address || '—'],
           ['Alarm', blank.alarm || '—'],
           ['Unit', blank.unit || '—'],
           ['Callsign', blank.callsign || '—'],
+          [
+            'Template',
+            isMedicalIncident(blank.alarm) ? 'Medical / Trauma' : 'Fire Response',
+          ],
         ]
       : activeAlbum
         ? [
@@ -332,15 +339,26 @@ export function FacebookView() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                   Manual incident details
                 </p>
-                <Field label="Date">
-                  <Input
-                    type="date"
-                    value={blank.date}
-                    onChange={(e) =>
-                      setBlank((b) => ({ ...b, date: e.target.value }))
-                    }
-                  />
-                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Date">
+                    <Input
+                      type="date"
+                      value={blank.date}
+                      onChange={(e) =>
+                        setBlank((b) => ({ ...b, date: e.target.value }))
+                      }
+                    />
+                  </Field>
+                  <Field label="Time">
+                    <Input
+                      type="time"
+                      value={blank.time || ''}
+                      onChange={(e) =>
+                        setBlank((b) => ({ ...b, time: e.target.value }))
+                      }
+                    />
+                  </Field>
+                </div>
                 <Field label="Location / Address">
                   <Input
                     value={blank.address}
@@ -368,6 +386,16 @@ export function FacebookView() {
                       </option>
                     ))}
                   </Select>
+                  {blank.alarm ? (
+                    <p className="mt-1 text-[10px] text-ink-400">
+                      Caption template:{' '}
+                      <span className="text-gold-500">
+                        {isMedicalIncident(blank.alarm)
+                          ? 'Medical / Trauma (smart narrative)'
+                          : 'Fire Response'}
+                      </span>
+                    </p>
+                  ) : null}
                 </Field>
                 <Field label="Responding Unit">
                   <MultiSelect
