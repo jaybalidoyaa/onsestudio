@@ -18,7 +18,7 @@ function AppRoutes() {
 
   useEffect(() => {
     if (!canEdit && (view === 'studio' || view === 'frames')) {
-      setView('home')
+      setView('gallery')
     }
   }, [canEdit, setView, view])
 

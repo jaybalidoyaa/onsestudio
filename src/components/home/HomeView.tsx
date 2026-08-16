@@ -1,33 +1,43 @@
 import { useAuth } from '../../store/AuthContext'
 import { useStudio } from '../../store/StudioContext'
+import {
+  STUDIO_CLOSING,
+  STUDIO_INTRO,
+  STUDIO_MOTTO,
+  STUDIO_PURPOSE,
+  STUDIO_SCOPE,
+} from '../../lib/brand'
 import { Button } from '../ui/Button'
 
 const ACTIONS = [
   {
     id: 'studio' as const,
     title: 'Studio',
-    blurb: 'Upload photos, apply frames, and process documentation.',
+    blurb:
+      'Upload response and event photographs, apply official frames, and prepare each image individually.',
     cta: 'Open Studio',
     editorsOnly: true,
   },
   {
     id: 'gallery' as const,
     title: 'Gallery',
-    blurb: 'Browse completed incident albums and download archives.',
+    blurb:
+      'Organize completed photographs into albums with their corresponding details.',
     cta: 'Open Gallery',
     editorsOnly: false,
   },
   {
     id: 'facebook' as const,
     title: 'Facebook',
-    blurb: 'Compose official Page posts from albums or a blank draft.',
+    blurb:
+      'Publish official Page posts from albums or a blank draft for the community.',
     cta: 'Create Post',
     editorsOnly: false,
   },
   {
     id: 'frames' as const,
     title: 'Frames',
-    blurb: 'Manage reusable documentation frame overlays.',
+    blurb: 'Manage reusable official documentation frame overlays.',
     cta: 'Frame Library',
     editorsOnly: true,
   },
@@ -39,7 +49,6 @@ export function HomeView() {
 
   return (
     <div className="relative h-full overflow-y-auto bg-navy-950">
-      {/* Atmospheric foundation */}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden
@@ -51,18 +60,9 @@ export function HomeView() {
           `,
         }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        aria-hidden
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(0deg, transparent, transparent 2px, #fff 2px, #fff 3px)',
-        }}
-      />
 
       <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-        {/* Hero — brand first */}
-        <section className="flex flex-1 flex-col items-center justify-center pb-10 pt-4 text-center sm:pb-14 sm:pt-8">
+        <section className="flex flex-col items-center pb-10 pt-4 text-center sm:pb-12 sm:pt-8">
           <img
             src="/logo.png"
             alt="Brigada Onse Sun Valley Fire and Rescue"
@@ -70,19 +70,20 @@ export function HomeView() {
             width={144}
             height={144}
           />
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-500">
-            Parañaque&apos;s Finest
-          </p>
-          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl lg:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl">
             Brigada Onse SVFAR
           </h1>
-          <p className="mt-2 text-lg font-semibold uppercase tracking-[0.2em] text-gold-500 sm:text-xl">
+          <p className="mt-2 text-lg font-semibold uppercase tracking-[0.2em] text-gold-500">
             Studio
           </p>
-          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-ink-300 sm:text-base">
-            Professional emergency-response photo documentation for Sun Valley
-            Fire and Rescue — frame, archive, and publish with confidence.
-          </p>
+
+          <div className="mx-auto mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-ink-300 sm:text-base">
+            <p>{STUDIO_INTRO}</p>
+            <p>{STUDIO_PURPOSE}</p>
+            <p>{STUDIO_SCOPE}</p>
+            <p className="font-semibold text-ink-100">{STUDIO_MOTTO}</p>
+            <p className="text-gold-500">{STUDIO_CLOSING}</p>
+          </div>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {canEdit ? (
@@ -118,7 +119,6 @@ export function HomeView() {
           </p>
         </section>
 
-        {/* Status strip */}
         <div className="mb-8 grid grid-cols-3 gap-3 border-y border-navy-700 py-4 text-center">
           {[
             ['Session photos', String(session.photos.length)],
@@ -134,7 +134,6 @@ export function HomeView() {
           ))}
         </div>
 
-        {/* Workspace links */}
         <section className="pb-10">
           <h2 className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
             Workspaces
@@ -160,7 +159,7 @@ export function HomeView() {
         </section>
 
         <footer className="pb-4 text-center text-[11px] text-ink-400">
-          For God and Country · made with love by{' '}
+          {STUDIO_MOTTO} · made with love by{' '}
           <span className="text-gold-500">finest 12</span>
         </footer>
       </div>

@@ -85,14 +85,12 @@ export function PhotoUploader({ compact = false }: { compact?: boolean }) {
         />
       </div>
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-ink-50">
-        Brigada Onse SVFAR
+        Brigada Onse SVFAR Studio
       </h1>
-      <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-gold-500">
-        Studio
-      </p>
-      <p className="mb-6 max-w-md text-sm text-ink-300">
-        Create professional emergency-response documentation from your
-        photographs. Upload photos, apply your frame, and build an album.
+      <p className="mb-4 max-w-lg text-sm leading-relaxed text-ink-300">
+        Upload response and event photographs, apply our official photo frames,
+        prepare each photograph individually, and organize completed images into
+        albums. One platform. One standard. Every moment documented.
       </p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button variant="primary" size="lg" onClick={() => inputRef.current?.click()}>
@@ -108,6 +106,10 @@ export function PhotoUploader({ compact = false }: { compact?: boolean }) {
       </div>
       <p className="mt-4 text-xs text-ink-400">
         JPG, PNG, WEBP{dragging ? ' — drop to upload' : ' — or drag & drop'}
+      </p>
+      <p className="mt-6 max-w-md text-[11px] text-ink-400">
+        Brigada Onse SVFAR Studio — preserving the moments, documenting the
+        mission.
       </p>
     </div>
   )

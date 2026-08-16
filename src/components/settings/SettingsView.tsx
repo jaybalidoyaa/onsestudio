@@ -89,18 +89,39 @@ export function SettingsView() {
               />
               <div>
                 <div className="font-semibold text-ink-50">
-                  Brigada Onse SVFAR
+                  Brigada Onse SVFAR Studio
                 </div>
                 <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-500">
-                  Studio
+                  Photo documentation & framing
                 </div>
               </div>
             </div>
-            <p className="text-sm text-ink-300">
-              Restricted emergency-response photo documentation for Sun Valley
-              Fire and Rescue. Medical alarms use a trauma caption; fire/10-70
-              alarms use the fire documentation caption.
-            </p>
+            <div className="space-y-3 text-sm leading-relaxed text-ink-300">
+              <p>
+                Introducing Brigada Onse SVFAR Studio — our dedicated photo
+                documentation and framing platform built for Brigada Onse Sun
+                Valley Fire and Rescue.
+              </p>
+              <p>
+                Designed to make our documentation more organized, professional,
+                and consistent, the Studio allows us to upload response and event
+                photographs, apply our official photo frames, prepare each
+                photograph individually, and organize completed images into
+                albums with their corresponding details.
+              </p>
+              <p>
+                From emergency responses and rescue operations to trainings,
+                community activities, and special events, every photograph can
+                now become part of a properly organized digital record.
+              </p>
+              <p className="font-semibold text-ink-100">
+                One platform. One standard. Every moment documented.
+              </p>
+              <p className="text-gold-500">
+                Brigada Onse SVFAR Studio — preserving the moments, documenting
+                the mission.
+              </p>
+            </div>
             <p className="mt-3 text-xs text-ink-400">
               Signed in as{' '}
               <strong className="text-ink-100">{user?.displayName}</strong> (

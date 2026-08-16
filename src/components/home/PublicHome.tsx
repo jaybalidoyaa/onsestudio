@@ -1,5 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../../store/AuthContext'
+import {
+  STUDIO_CLOSING,
+  STUDIO_INTRO,
+  STUDIO_MOTTO,
+  STUDIO_PURPOSE,
+  STUDIO_SCOPE,
+} from '../../lib/brand'
 import { Button } from '../ui/Button'
 import { Field, Input } from '../ui/Panel'
 
@@ -47,7 +54,7 @@ export function PublicHome() {
         }}
       />
 
-      <div className="relative mx-auto flex min-h-full max-w-5xl flex-col px-4">
+      <div className="relative mx-auto flex min-h-full max-w-3xl flex-col px-4">
         <header className="flex items-center justify-between py-5">
           <div className="flex items-center gap-2.5">
             <img
@@ -58,7 +65,7 @@ export function PublicHome() {
               height={36}
             />
             <span className="text-sm font-semibold tracking-wide">
-              Brigada Onse SVFAR
+              Brigada Onse SVFAR Studio
             </span>
           </div>
           {!showAuth ? (
@@ -73,27 +80,29 @@ export function PublicHome() {
         </header>
 
         {!showAuth ? (
-          <section className="flex flex-1 flex-col items-center justify-center py-16 text-center">
+          <section className="flex flex-1 flex-col items-center justify-center py-12 text-center sm:py-16">
             <img
               src="/logo.png"
               alt="Brigada Onse SVFAR"
-              className="mb-8 h-40 w-40 object-contain sm:h-48 sm:w-48"
-              width={192}
-              height={192}
+              className="mb-8 h-36 w-36 object-contain sm:h-44 sm:w-44"
+              width={176}
+              height={176}
             />
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-gold-500">
-              Sun Valley Fire and Rescue
-            </p>
-            <h1 className="text-4xl font-semibold tracking-tight text-ink-50 sm:text-6xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl">
               Brigada Onse SVFAR
             </h1>
             <p className="mt-2 text-base font-semibold uppercase tracking-[0.22em] text-gold-500">
               Studio
             </p>
-            <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-ink-300 sm:text-base">
-              Authorized photo documentation for emergency response, training,
-              and community operations.
-            </p>
+
+            <div className="mx-auto mt-8 max-w-xl space-y-4 text-sm leading-relaxed text-ink-300 sm:text-base">
+              <p>{STUDIO_INTRO}</p>
+              <p>{STUDIO_PURPOSE}</p>
+              <p>{STUDIO_SCOPE}</p>
+              <p className="font-semibold text-ink-100">{STUDIO_MOTTO}</p>
+              <p className="text-gold-500">{STUDIO_CLOSING}</p>
+            </div>
+
             <div className="mt-10">
               <Button
                 variant="primary"
@@ -104,7 +113,7 @@ export function PublicHome() {
               </Button>
             </div>
             <p className="mt-12 text-[11px] text-ink-400">
-              Restricted access · made with love by{' '}
+              Authorized personnel only · made with love by{' '}
               <span className="text-gold-500">finest 12</span>
             </p>
           </section>
