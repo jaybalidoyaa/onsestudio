@@ -105,18 +105,55 @@ export function SettingsView() {
 
         {isAdmin ? (
           <Panel title="Facebook Page">
-            <p className="mb-3 text-xs text-ink-400">
-              Connect a Facebook Page Access Token to publish documentation
-              albums directly from Gallery. Create a Meta app, generate a Page
-              token with <code className="text-gold-500">pages_manage_posts</code>{' '}
-              permission, then paste credentials below.
-            </p>
+            <div className="mb-3 space-y-2 rounded-md border border-navy-700 bg-navy-850 p-3 text-xs text-ink-300">
+              <p className="font-semibold text-gold-500">
+                Use a Page Access Token — not a User token
+              </p>
+              <p>
+                <code className="text-alert-500">publish_actions</code> is
+                deprecated. Posting must use a{' '}
+                <strong className="text-ink-50">Page Access Token</strong> with:
+              </p>
+              <ul className="list-inside list-disc space-y-0.5 text-ink-400">
+                <li>
+                  <code className="text-gold-500">pages_show_list</code>
+                </li>
+                <li>
+                  <code className="text-gold-500">pages_manage_posts</code>
+                </li>
+                <li>
+                  <code className="text-gold-500">pages_read_engagement</code>
+                </li>
+              </ul>
+              <ol className="list-inside list-decimal space-y-1 text-ink-400">
+                <li>
+                  Open{' '}
+                  <a
+                    className="text-gold-500 underline"
+                    href="https://developers.facebook.com/tools/explorer/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Graph API Explorer
+                  </a>
+                </li>
+                <li>Select your Meta app → Get User Token with the 3 permissions above</li>
+                <li>
+                  Run <code className="text-ink-100">GET /me/accounts</code>
+                </li>
+                <li>
+                  Copy your Page&apos;s <code className="text-ink-100">id</code> and{' '}
+                  <code className="text-ink-100">access_token</code> into the fields
+                  below (that access_token is the Page token)
+                </li>
+              </ol>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Page ID">
                 <Input
                   value={fb.pageId}
                   onChange={(e) => setFb({ ...fb, pageId: e.target.value })}
-                  placeholder="1234567890"
+                  placeholder="From /me/accounts → id"
                 />
               </Field>
               <Field label="Page Name (optional)">
@@ -135,7 +172,7 @@ export function SettingsView() {
                   onChange={(e) =>
                     setFb({ ...fb, pageAccessToken: e.target.value })
                   }
-                  placeholder="EAAB…"
+                  placeholder="Page access_token from /me/accounts"
                   autoComplete="off"
                 />
               </Field>
@@ -159,10 +196,16 @@ export function SettingsView() {
                   setErr('')
                   void verifyFacebookPage(fb.pageId, fb.pageAccessToken)
                     .then(async (page) => {
-                      const next = { ...fb, pageName: page.name }
+                      const next = {
+                        ...fb,
+                        pageId: page.id,
+                        pageName: page.name,
+                        // Persist the resolved Page token when a User token was pasted
+                        pageAccessToken: page.accessToken,
+                      }
                       setFb(next)
                       await saveFacebookSettings(next)
-                      flash(`Connected to ${page.name}`)
+                      flash(`Connected to ${page.name} (Page token ready)`)
                     })
                     .catch((e: unknown) =>
                       setErr(

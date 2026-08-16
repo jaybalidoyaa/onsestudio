@@ -4,7 +4,7 @@ import {
   captionSourceFromAlbum,
   captionSourceFromMetadata,
 } from '../../lib/caption'
-import { postPhotosToFacebookPage, verifyFacebookPage } from '../../lib/facebook'
+import { postPhotosToFacebookPage } from '../../lib/facebook'
 import { useAuth } from '../../store/AuthContext'
 import { useStudio } from '../../store/StudioContext'
 import { formatDisplayDate } from '../../lib/utils'
@@ -92,19 +92,8 @@ export function FacebookView() {
       return
     }
     setBusy(true)
-    setProgress('Connecting to Facebook…')
+    setProgress('Resolving Page Access Token…')
     try {
-      const page = await verifyFacebookPage(
-        settings.facebook.pageId,
-        settings.facebook.pageAccessToken,
-      )
-      if (isAdmin && page.name !== settings.facebook.pageName) {
-        await saveFacebookSettings({
-          ...settings.facebook,
-          pageName: page.name,
-        })
-      }
-
       const result = await postPhotosToFacebookPage({
         pageId: settings.facebook.pageId,
         accessToken: settings.facebook.pageAccessToken,
@@ -114,15 +103,26 @@ export function FacebookView() {
           setProgress(`Uploading photograph ${current} of ${total}…`),
       })
 
+      if (
+        isAdmin &&
+        result.pageName &&
+        result.pageName !== settings.facebook.pageName
+      ) {
+        await saveFacebookSettings({
+          ...settings.facebook,
+          pageName: result.pageName,
+        })
+      }
+
       await logActivity(
         'facebook.post',
-        `Posted “${activeAlbum?.title || 'incident'}” (${selectedPhotos.length} photos) to ${page.name || 'Facebook Page'}`,
+        `Posted “${activeAlbum?.title || 'incident'}” (${selectedPhotos.length} photos) to ${result.pageName || 'Facebook Page'}`,
       )
       setProgress('')
       setSuccess(
         result.postId
-          ? `Posted to ${page.name}. Post ID: ${result.postId}`
-          : `Posted ${selectedPhotos.length} photo(s) to ${page.name}.`,
+          ? `Posted to ${result.pageName || 'Facebook Page'}. Post ID: ${result.postId}`
+          : `Posted ${selectedPhotos.length} photo(s) to ${result.pageName || 'Facebook Page'}.`,
       )
     } catch (err) {
       setProgress('')
@@ -131,6 +131,18 @@ export function FacebookView() {
       )
     } finally {
       setBusy(false)
+    }
+  }
+
+  const copyAndOpenFacebook = async () => {
+    try {
+      await navigator.clipboard.writeText(caption)
+      window.open('https://www.facebook.com/', '_blank', 'noopener,noreferrer')
+      setSuccess(
+        'Caption copied. Facebook opened — paste the caption and attach your photos manually on the Page.',
+      )
+    } catch {
+      setError('Could not copy caption. Copy it manually, then open Facebook.')
     }
   }
 
@@ -358,19 +370,27 @@ export function FacebookView() {
             </div>
 
             <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-navy-700 bg-navy-850 px-4 py-3">
-              <Button
-                variant="secondary"
-                onClick={() => void navigator.clipboard.writeText(caption)}
-              >
-                Copy caption
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => void navigator.clipboard.writeText(caption)}
+                >
+                  Copy caption
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => void copyAndOpenFacebook()}
+                >
+                  Open Facebook (manual)
+                </Button>
+              </div>
               <Button
                 variant="primary"
                 className="min-w-[140px]"
                 disabled={busy || !selectedPhotos.length || !configured}
                 onClick={() => void publish()}
               >
-                {busy ? 'Posting…' : 'Post'}
+                {busy ? 'Posting…' : 'Post to Page'}
               </Button>
             </footer>
           </section>
