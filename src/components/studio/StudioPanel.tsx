@@ -245,11 +245,11 @@ export function StudioPanel() {
                 })
               }
             >
-              <option value="fit-frame">Fit frame to photo</option>
+              <option value="stretch">Stretch to 940×788</option>
+              <option value="fit-frame">Fit frame to canvas</option>
               <option value="fit-photo">Fit photo inside frame</option>
               <option value="cover">Cover</option>
               <option value="contain">Contain</option>
-              <option value="stretch">Stretch</option>
             </Select>
           </Field>
           <Field label={`Frame Scale (${session.frameConfig.scale}%)`}>
@@ -379,6 +379,10 @@ export function StudioPanel() {
       ) : null}
 
       <Panel title="Export">
+        <div className="mb-3 rounded-md border border-navy-700 bg-navy-850 px-2 py-1.5 text-xs text-ink-300">
+          Output size:{' '}
+          <strong className="text-ink-50">940 × 788 px</strong>
+        </div>
         <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
           <Stat label="Total Photos" value={session.photos.length} />
           <Stat label="Ready" value={ready} />

@@ -37,6 +37,10 @@ export function SettingsView() {
         <Panel title="Storage">
           <ul className="space-y-2 text-sm text-ink-300">
             <li>
+              Output canvas:{' '}
+              <strong className="text-ink-50">940 × 788 px</strong>
+            </li>
+            <li>
               Session photos:{' '}
               <strong className="text-ink-50">{session.photos.length}</strong>
             </li>

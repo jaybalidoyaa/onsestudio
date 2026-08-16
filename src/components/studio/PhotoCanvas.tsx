@@ -41,8 +41,6 @@ export function PhotoCanvas() {
         const url = await renderPreviewDataUrl({
           photoUrl: active.objectUrl,
           frameUrl: activeFrame?.objectUrl ?? null,
-          width: active.width,
-          height: active.height,
           adjustments: active.adjustments,
           frameConfig: session.frameConfig,
           includeSafeArea: session.frameConfig.showSafeArea,

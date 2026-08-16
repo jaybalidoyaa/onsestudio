@@ -227,7 +227,8 @@ export const DEFAULT_ADJUSTMENTS: PhotoAdjustments = {
 }
 
 export const DEFAULT_FRAME_CONFIG: FrameConfig = {
-  fitMode: 'fit-frame',
+  // Stretch frame to the fixed 940×788 output canvas
+  fitMode: 'stretch',
   position: 'center',
   scale: 100,
   opacity: 100,

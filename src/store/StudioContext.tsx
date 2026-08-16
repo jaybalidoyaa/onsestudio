@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { compositePhoto } from '../lib/compositor'
 import * as db from '../lib/db'
+import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '../lib/output'
 import {
   createObjectUrl,
   createThumbnailBlob,
@@ -690,8 +691,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         const blob = await compositePhoto({
           photoUrl: photo.objectUrl,
           frameUrl: frame?.objectUrl ?? null,
-          width: photo.width,
-          height: photo.height,
+          width: OUTPUT_WIDTH,
+          height: OUTPUT_HEIGHT,
           adjustments: photo.adjustments,
           frameConfig,
           outputType:
@@ -703,6 +704,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         return {
           ...photo,
           status: 'processed',
+          // Output is always the fixed documentation size
+          width: OUTPUT_WIDTH,
+          height: OUTPUT_HEIGHT,
           processedBlob: blob,
           processedUrl: createObjectUrl(blob),
           errorMessage: undefined,
@@ -842,8 +846,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         albumId,
         filename: p.filename,
         order: i,
-        width: p.width,
-        height: p.height,
+        width: OUTPUT_WIDTH,
+        height: OUTPUT_HEIGHT,
         originalBlob: p.originalBlob,
         processedBlob: p.processedBlob!,
         thumbnailBlob: thumb,
@@ -1021,12 +1025,12 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         })
         const file = list[i]
         try {
-          const { width, height, url } = await readImageDimensions(file)
+          const { url } = await readImageDimensions(file)
           const blob = await compositePhoto({
             photoUrl: url,
             frameUrl: frame?.objectUrl ?? null,
-            width,
-            height,
+            width: OUTPUT_WIDTH,
+            height: OUTPUT_HEIGHT,
             adjustments: { ...DEFAULT_ADJUSTMENTS },
             frameConfig: { ...DEFAULT_FRAME_CONFIG },
             outputType: 'image/jpeg',
@@ -1038,8 +1042,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
             albumId,
             filename: file.name,
             order: startOrder + i,
-            width,
-            height,
+            width: OUTPUT_WIDTH,
+            height: OUTPUT_HEIGHT,
             originalBlob: file,
             processedBlob: blob,
             thumbnailBlob: thumb,

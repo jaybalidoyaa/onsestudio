@@ -1,11 +1,12 @@
 import type { FrameConfig, PhotoAdjustments } from '../types'
 import { applyCssFilters, canvasToBlob, loadImageFromUrl } from './image'
+import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from './output'
 
 export interface CompositeInput {
   photoUrl: string
   frameUrl: string | null
-  width: number
-  height: number
+  width?: number
+  height?: number
   adjustments: PhotoAdjustments
   frameConfig: FrameConfig
   outputType?: 'image/jpeg' | 'image/png'
@@ -62,36 +63,23 @@ function getFrameRect(
       h = canvasH * scalePct
       break
     case 'cover': {
-      const scale =
-        Math.max(canvasW / frameW, canvasH / frameH) * scalePct
+      const scale = Math.max(canvasW / frameW, canvasH / frameH) * scalePct
       w = frameW * scale
       h = frameH * scale
       break
     }
     case 'contain':
     case 'fit-photo': {
-      const scale =
-        Math.min(canvasW / frameW, canvasH / frameH) * scalePct
+      const scale = Math.min(canvasW / frameW, canvasH / frameH) * scalePct
       w = frameW * scale
       h = frameH * scale
       break
     }
     case 'fit-frame':
     default: {
-      // Fit frame to full canvas while preserving aspect ratio (may letterbox)
-      const scale =
-        Math.min(canvasW / frameW, canvasH / frameH) * scalePct
-      // Prefer covering the canvas with the frame design without distorting
-      const coverScale =
-        Math.max(canvasW / frameW, canvasH / frameH) * scalePct
-      // Default professional behavior: cover canvas with frame overlay
-      w = frameW * coverScale
-      h = frameH * coverScale
-      // If scale was explicitly reduced, use contain-based scale
-      if (scalePct < 1) {
-        w = frameW * scale
-        h = frameH * scale
-      }
+      // Default: stretch frame to exact output canvas (940×788 frames)
+      w = canvasW * scalePct
+      h = canvasH * scalePct
       break
     }
   }
@@ -112,16 +100,15 @@ function getFrameRect(
 export async function compositePhoto(input: CompositeInput): Promise<Blob> {
   const photo = await loadImageFromUrl(input.photoUrl)
   const canvas = document.createElement('canvas')
-  canvas.width = input.width || photo.naturalWidth
-  canvas.height = input.height || photo.naturalHeight
+  // Always render at the fixed documentation size unless explicitly overridden
+  canvas.width = input.width ?? OUTPUT_WIDTH
+  canvas.height = input.height ?? OUTPUT_HEIGHT
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Unable to create rendering context.')
 
-  // Background
   ctx.fillStyle = '#000'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  // Photo with adjustments
   ctx.save()
   ctx.filter = applyCssFilters(input.adjustments)
   const rotation = ((input.adjustments.rotation % 360) + 360) % 360
@@ -129,11 +116,24 @@ export async function compositePhoto(input: CompositeInput): Promise<Blob> {
   if (rotation !== 0) {
     ctx.translate(canvas.width / 2, canvas.height / 2)
     ctx.rotate((rotation * Math.PI) / 180)
-    // For 90/270, swap effective draw size
     if (rotation === 90 || rotation === 270) {
-      drawCover(ctx, photo, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width)
+      drawCover(
+        ctx,
+        photo,
+        -canvas.height / 2,
+        -canvas.width / 2,
+        canvas.height,
+        canvas.width,
+      )
     } else {
-      drawCover(ctx, photo, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height)
+      drawCover(
+        ctx,
+        photo,
+        -canvas.width / 2,
+        -canvas.height / 2,
+        canvas.width,
+        canvas.height,
+      )
     }
   } else if (input.adjustments.crop) {
     const c = input.adjustments.crop
@@ -153,7 +153,6 @@ export async function compositePhoto(input: CompositeInput): Promise<Blob> {
   }
   ctx.restore()
 
-  // Optional sharpness via slight unsharp (approximation: redraw with contrast)
   if (input.adjustments.sharpness > 0) {
     ctx.save()
     ctx.globalAlpha = input.adjustments.sharpness / 200
@@ -162,7 +161,6 @@ export async function compositePhoto(input: CompositeInput): Promise<Blob> {
     ctx.restore()
   }
 
-  // Frame overlay
   if (input.frameUrl) {
     const frame = await loadImageFromUrl(input.frameUrl)
     const rect = getFrameRect(
@@ -174,22 +172,22 @@ export async function compositePhoto(input: CompositeInput): Promise<Blob> {
     )
     ctx.save()
     ctx.globalAlpha = Math.max(0, Math.min(1, input.frameConfig.opacity / 100))
-    if (input.frameConfig.fitMode === 'stretch') {
-      ctx.drawImage(frame, rect.x, rect.y, rect.w, rect.h)
-    } else {
-      ctx.drawImage(frame, rect.x, rect.y, rect.w, rect.h)
-    }
+    ctx.drawImage(frame, rect.x, rect.y, rect.w, rect.h)
     ctx.restore()
   }
 
-  // Safe area guides (preview only)
   if (input.includeSafeArea) {
     const inset = Math.round(Math.min(canvas.width, canvas.height) * 0.06)
     ctx.save()
     ctx.strokeStyle = 'rgba(232, 184, 74, 0.7)'
     ctx.lineWidth = Math.max(2, Math.round(canvas.width / 800))
     ctx.setLineDash([12, 8])
-    ctx.strokeRect(inset, inset, canvas.width - inset * 2, canvas.height - inset * 2)
+    ctx.strokeRect(
+      inset,
+      inset,
+      canvas.width - inset * 2,
+      canvas.height - inset * 2,
+    )
     ctx.restore()
   }
 
@@ -200,16 +198,11 @@ export async function compositePhoto(input: CompositeInput): Promise<Blob> {
 
 export async function renderPreviewDataUrl(
   input: CompositeInput,
-  maxEdge = 1600,
 ): Promise<string> {
-  const photo = await loadImageFromUrl(input.photoUrl)
-  const scale = Math.min(1, maxEdge / Math.max(photo.naturalWidth, photo.naturalHeight))
-  const width = Math.round(photo.naturalWidth * scale)
-  const height = Math.round(photo.naturalHeight * scale)
   const blob = await compositePhoto({
     ...input,
-    width,
-    height,
+    width: OUTPUT_WIDTH,
+    height: OUTPUT_HEIGHT,
     includeSafeArea: input.includeSafeArea,
   })
   return URL.createObjectURL(blob)
