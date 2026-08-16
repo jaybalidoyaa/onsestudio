@@ -75,19 +75,21 @@ export function PhotoUploader({ compact = false }: { compact?: boolean }) {
           e.target.value = ''
         }}
       />
-      <div className="mb-4 text-gold-500" aria-hidden>
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 7h3l2-2h6l2 2h3v12H4V7z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <circle cx="12" cy="13" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
+      <div className="mb-4" aria-hidden>
+        <img
+          src="/logo.png"
+          alt=""
+          className="mx-auto h-20 w-20 object-contain"
+          width={80}
+          height={80}
+        />
       </div>
-      <h1 className="mb-2 text-2xl font-semibold tracking-tight text-ink-50">
-        Photo Documentation Studio
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-ink-50">
+        Brigada Onse SVFAR
       </h1>
+      <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-gold-500">
+        Studio
+      </p>
       <p className="mb-6 max-w-md text-sm text-ink-300">
         Create professional emergency-response documentation from your
         photographs. Upload photos, apply your frame, and build an album.

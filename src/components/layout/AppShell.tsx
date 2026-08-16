@@ -30,23 +30,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-full flex-col bg-navy-950 text-ink-100">
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-navy-700 bg-navy-900 px-3">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-navy-700 bg-navy-900 px-3">
         <div className="flex items-center gap-2.5 pr-2">
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded border border-gold-500/60 text-gold-500"
-            aria-hidden
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" />
-              <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-            </svg>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Brigada Onse Sun Valley Fire and Rescue"
+            className="h-10 w-10 object-contain"
+            width={40}
+            height={40}
+          />
           <div className="leading-tight">
             <div className="text-sm font-semibold tracking-wide text-ink-50">
-              ONSE STUDIO
+              Brigada Onse SVFAR
             </div>
-            <div className="text-[10px] uppercase tracking-[0.14em] text-ink-400">
-              Documentation
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-500">
+              Studio
             </div>
           </div>
         </div>
@@ -113,7 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="relative min-h-0 flex-1">{children}</div>
 
-      <footer className="flex h-9 shrink-0 items-center gap-4 border-t border-navy-700 bg-navy-900 px-3 text-xs text-ink-300">
+      <footer className="flex h-10 shrink-0 items-center gap-4 border-t border-navy-700 bg-navy-900 px-3 text-xs text-ink-300">
         <span>
           <strong className="text-ink-100">{session.photos.length}</strong> Photos
         </span>
@@ -123,7 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <span>
           <strong className="text-ink-100">{processed}</strong> Processed
         </span>
-        <span className="ml-auto">
+        <span className="hidden sm:inline">
           Status:{' '}
           <strong className="text-gold-500">
             {processing
@@ -133,11 +131,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 : 'Waiting for photos'}
           </strong>
         </span>
+        <span className="ml-auto text-[11px] text-ink-400">
+          made with love by{' '}
+          <span className="font-medium text-gold-500">finest 12</span>
+        </span>
       </footer>
 
       {processing ? (
         <div
-          className="pointer-events-none absolute inset-x-0 top-12 z-40 flex justify-center px-4"
+          className="pointer-events-none absolute inset-x-0 top-14 z-40 flex justify-center px-4"
           role="status"
           aria-live="polite"
         >

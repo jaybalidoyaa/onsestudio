@@ -1,12 +1,17 @@
-# Onse Studio
+# Brigada Onse SVFAR Studio
 
-Standalone **Emergency Response Photo Documentation Studio** for incident photo framing, batch processing, and album archival.
+Standalone **Emergency Response Photo Documentation Studio** for Brigada Onse /
+Sun Valley Fire and Rescue — incident photo framing, batch processing, and album
+archival.
+
+made with love by finest 12
 
 ## Features
 
 - **Studio** — upload photos, enter incident metadata, apply a user-provided frame overlay, preview, and export
 - **User frames** — upload PNG/JPG/WEBP/SVG overlays; reusable frame library (IndexedDB)
 - **Gallery** — completed documentation albums with search, filters, viewer, and ZIP download
+- **Fixed output** — processed photos render at **940 × 788 px**
 - **Non-destructive** — originals preserved separately from processed outputs
 - **Local-first** — sessions, frames, and albums stored in the browser
 

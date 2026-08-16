@@ -26,11 +26,29 @@ export function SettingsView() {
         </div>
 
         <Panel title="About">
+          <div className="mb-3 flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Brigada Onse SVFAR"
+              className="h-14 w-14 object-contain"
+              width={56}
+              height={56}
+            />
+            <div>
+              <div className="font-semibold text-ink-50">Brigada Onse SVFAR</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-500">
+                Studio
+              </div>
+            </div>
+          </div>
           <p className="text-sm text-ink-300">
-            <strong className="text-ink-50">Onse Studio</strong> is a
-            standalone Emergency Response Photo Documentation Studio. Frames are
-            user-provided overlays. Processed photographs are archived as albums
-            in the Gallery.
+            Emergency Response Photo Documentation Studio for Sun Valley Fire
+            and Rescue. Frames are user-provided overlays. Processed photographs
+            are archived as albums in the Gallery.
+          </p>
+          <p className="mt-3 text-xs text-ink-400">
+            made with love by{' '}
+            <span className="text-gold-500">finest 12</span>
           </p>
         </Panel>
 
