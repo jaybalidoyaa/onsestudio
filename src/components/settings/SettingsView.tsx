@@ -147,10 +147,39 @@ export function SettingsView() {
                 Email notifications
               </h2>
               <p className="mb-4 mt-1 text-xs leading-relaxed text-ink-400">
-                When enabled, access-request alerts and approval emails open a
-                pre-filled Gmail compose window in your browser. No third-party
-                service or API key required — just your Gmail address.
+                When enabled, the server automatically sends transactional
+                emails via MailChannels (free, built into Cloudflare Workers)
+                using the Gmail address configured in the Worker secrets.
+                No browser action required — emails are sent silently in the
+                background on access request, approval, and rejection.
               </p>
+
+              {/* Setup instructions */}
+              <div className="mb-4 space-y-1.5 rounded-lg border border-navy-700 bg-navy-900 p-3.5 text-xs text-ink-300">
+                <p className="font-semibold text-gold-500">One-time server setup</p>
+                <p>
+                  Run these commands once after deploying the Worker:
+                </p>
+                <pre className="mt-1.5 overflow-x-auto rounded-md bg-navy-950 p-2.5 font-mono text-[11px] leading-relaxed text-ink-100">
+{`wrangler secret put GMAIL_USER
+# → enter: yourname@gmail.com
+
+wrangler secret put GMAIL_APP_PASSWORD
+# → enter: your 16-char Gmail App Password`}
+                </pre>
+                <p className="mt-1">
+                  To get a Gmail App Password: Google Account → Security → 2-Step
+                  Verification → App passwords → create one for "Mail".
+                </p>
+                <p>
+                  Also add an SPF record to your domain DNS so MailChannels
+                  can send on your behalf:{' '}
+                  <code className="rounded bg-navy-800 px-1 py-0.5 text-gold-400">
+                    v=spf1 include:relay.mailchannels.net ~all
+                  </code>
+                </p>
+              </div>
+
               <div className="space-y-3.5">
                 <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink-200 select-none">
                   <input
@@ -164,29 +193,11 @@ export function SettingsView() {
                     }
                     className="accent-gold-500"
                   />
-                  Enable email notifications via Gmail
+                  Enable server-side email notifications
                 </label>
                 <Field
-                  label="Your Gmail address"
-                  hint="Gmail compose will open in your browser when notifications are triggered"
-                >
-                  <Input
-                    type="email"
-                    value={emailSettings.gmailAddress}
-                    onChange={(e) =>
-                      setEmailSettings({
-                        ...emailSettings,
-                        gmailAddress: e.target.value,
-                      })
-                    }
-                    placeholder="yourname@gmail.com"
-                    autoComplete="email"
-                    disabled={!emailSettings.enabled}
-                  />
-                </Field>
-                <Field
                   label="Admin notification email"
-                  hint="Where new access-request alerts are addressed"
+                  hint="Where new access-request alerts are sent"
                 >
                   <Input
                     type="email"

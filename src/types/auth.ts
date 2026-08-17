@@ -8,18 +8,14 @@ export interface StudioUser {
   callsign?: string
   brigadaMember?: boolean
   role: UserRole
-  passwordSalt: string
-  passwordHash: string
   active: boolean
+  lastLoginAt: number | null
   createdAt: number
   updatedAt: number
-  lastLoginAt: number | null
 }
 
 export interface EmailSettings {
   enabled: boolean
-  /** Gmail address the admin uses to send notifications (opens Gmail compose) */
-  gmailAddress: string
   adminNotificationEmail: string
 }
 
@@ -28,7 +24,7 @@ export interface AuthSession {
   username: string
   displayName: string
   role: UserRole
-  issuedAt: number
+  token: string
   expiresAt: number
 }
 
@@ -40,7 +36,6 @@ export interface FacebookSettings {
 }
 
 export interface AppSettings {
-  id: 'app'
   facebook: FacebookSettings
   email: EmailSettings
   requireLogin: boolean
@@ -67,17 +62,15 @@ export const DEFAULT_FACEBOOK_SETTINGS: FacebookSettings = {
 
 export const DEFAULT_EMAIL_SETTINGS: EmailSettings = {
   enabled: false,
-  gmailAddress: '',
   adminNotificationEmail: '',
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  id: 'app',
   facebook: { ...DEFAULT_FACEBOOK_SETTINGS },
   email: { ...DEFAULT_EMAIL_SETTINGS },
   requireLogin: true,
   sessionHours: 12,
-  updatedAt: Date.now(),
+  updatedAt: 0,
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

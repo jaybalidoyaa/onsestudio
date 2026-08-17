@@ -8,7 +8,7 @@ import type {
 } from '../types'
 import type { AccessRequest } from '../types/access'
 import type { ActivityEntry, AppSettings, StudioUser } from '../types/auth'
-import { DEFAULT_APP_SETTINGS, DEFAULT_EMAIL_SETTINGS } from '../types/auth'
+import { DEFAULT_APP_SETTINGS } from '../types/auth'
 
 interface StudioDB extends DBSchema {
   frames: {
@@ -276,28 +276,24 @@ export async function getAppSettings(): Promise<AppSettings> {
   if (existing) {
     return {
       ...DEFAULT_APP_SETTINGS,
-      ...existing,
+      ...(existing as unknown as AppSettings),
       facebook: {
         ...DEFAULT_APP_SETTINGS.facebook,
-        ...existing.facebook,
+        ...((existing as unknown as AppSettings).facebook ?? {}),
       },
       email: {
-        ...DEFAULT_EMAIL_SETTINGS,
-        ...existing.email,
+        ...DEFAULT_APP_SETTINGS.email,
+        ...((existing as unknown as AppSettings).email ?? {}),
       },
     }
   }
-  await db.put('settings', DEFAULT_APP_SETTINGS)
-  return {
-    ...DEFAULT_APP_SETTINGS,
-    facebook: { ...DEFAULT_APP_SETTINGS.facebook },
-    email: { ...DEFAULT_EMAIL_SETTINGS },
-  }
+  await db.put('settings', { ...DEFAULT_APP_SETTINGS, id: 'app' } as AppSettings & { id: string })
+  return { ...DEFAULT_APP_SETTINGS }
 }
 
 export async function saveAppSettings(settings: AppSettings) {
   const db = await getDb()
-  await db.put('settings', { ...settings, id: 'app', updatedAt: Date.now() })
+  await db.put('settings', { ...(settings as AppSettings & { id: string }), id: 'app', updatedAt: Date.now() })
 }
 
 /* ---------- Activity ---------- */

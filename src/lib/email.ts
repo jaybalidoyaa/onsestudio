@@ -1,4 +1,12 @@
-import type { EmailSettings } from '../types/auth'
+/**
+ * Email is now handled server-side by the Cloudflare Worker via MailChannels.
+ * The frontend no longer sends emails directly — it just triggers API calls
+ * (submitAccessRequest, approveAccessRequest, rejectAccessRequest) and the
+ * Worker sends the email automatically when email is enabled in settings.
+ *
+ * This file keeps the mailto fallback helper used in AccessRequestsPanel
+ * when the admin wants to manually send credentials if email is disabled.
+ */
 
 export interface SendEmailInput {
   to: string
@@ -7,33 +15,7 @@ export interface SendEmailInput {
 }
 
 /**
- * Opens a Gmail compose window pre-filled with the message.
- * Uses the Gmail web compose URL — no third-party API or key required.
- * Returns true if the window was opened, false if email is not enabled
- * or the admin Gmail address is not set.
- */
-export function sendEmail(
-  settings: EmailSettings,
-  input: SendEmailInput,
-): boolean {
-  if (!settings.enabled || !settings.gmailAddress.trim()) {
-    return false
-  }
-
-  const params = new URLSearchParams({
-    view: 'cm',
-    to: input.to,
-    su: input.subject,
-    body: input.body,
-  })
-
-  const url = `https://mail.google.com/mail/?${params.toString()}`
-  window.open(url, '_blank', 'noopener,noreferrer')
-  return true
-}
-
-/**
- * Builds a standard mailto: link as a fallback when Gmail is not configured.
+ * Builds a standard mailto: link as a fallback when server email is disabled.
  */
 export function buildMailtoLink(input: SendEmailInput): string {
   const params = new URLSearchParams({
