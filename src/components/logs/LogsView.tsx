@@ -37,16 +37,6 @@ const ACTION_LABELS: Record<string, string> = {
   'album.delete': 'Album deleted',
 }
 
-function formatTime(ms: number): string {
-  const d = new Date(ms)
-  return d.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
 
 export function LogsView() {
   const { activity, refreshActivity, isAdmin } = useAuth()
