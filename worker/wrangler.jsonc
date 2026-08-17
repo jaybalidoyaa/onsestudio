@@ -11,7 +11,7 @@
       "database_name": "studio-db",
       // Replace with your actual D1 database ID after running:
       //   wrangler d1 create studio-db
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "database_id": "9fbabcf2-2418-4532-b5b0-920343ee1a46",
       "migrations_dir": "migrations"
     }
   ],
