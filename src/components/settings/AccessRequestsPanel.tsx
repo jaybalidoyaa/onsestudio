@@ -28,9 +28,9 @@ export function AccessRequestsPanel() {
     void approveAccessRequest(id, roles[id] ?? 'documenter')
       .then(({ username, password, emailSent }) => {
         if (emailSent) {
-          flash(`Approved ${username}. Login credentials emailed.`)
+          flash(`Approved ${username}. Gmail compose opened with login credentials.`)
         } else {
-          flash(`Approved ${username}. Email not sent — copy credentials below.`)
+          flash(`Approved ${username}. Email not configured — copy credentials below.`)
           const mailto = buildMailtoLink({
             to: accessRequests.find((r) => r.id === id)?.email ?? '',
             subject: 'Brigada Onse SVFAR Studio — Your access has been approved',
@@ -71,45 +71,55 @@ export function AccessRequestsPanel() {
       <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
         Access requests
       </h2>
-      <p className="mb-3 text-xs text-ink-400">
+      <p className="mb-4 text-xs leading-relaxed text-ink-400">
         Review pending requests from the public homepage. Approving creates an
-        account and sends login credentials by email.
+        account and opens a Gmail compose window with login credentials.
       </p>
+
       {(msg || err) && (
-        <p
-          className={`mb-3 text-sm ${err ? 'text-alert-500' : 'text-ok-500'}`}
+        <div
+          className={`mb-4 rounded-lg border px-3 py-2.5 text-sm ${
+            err
+              ? 'border-alert-500/40 bg-alert-500/10 text-alert-400'
+              : 'border-ok-500/40 bg-ok-500/10 text-ok-400'
+          }`}
           role="status"
         >
           {err || msg}
-        </p>
+        </div>
       )}
 
       {pending.length === 0 ? (
-        <p className="text-sm text-ink-400">No pending access requests.</p>
+        <p className="rounded-lg border border-navy-700 bg-navy-900/60 px-4 py-5 text-center text-sm text-ink-400">
+          No pending access requests.
+        </p>
       ) : (
-        <ul className="mb-4 space-y-2">
+        <ul className="mb-5 space-y-3">
           {pending.map((r) => (
             <li
               key={r.id}
-              className="border border-navy-700 bg-navy-950 p-3"
+              className="rounded-lg border border-navy-600 bg-navy-950 p-4"
             >
-              <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <div className="font-medium text-ink-50">
-                    @{r.username}{' '}
-                    <span className="text-ink-400">· {r.callsign}</span>
-                  </div>
-                  <div className="text-xs text-ink-400">
-                    {r.email} · Brigada member:{' '}
-                    {r.isBrigadaMember ? 'Yes' : 'No'} ·{' '}
-                    {new Date(r.createdAt).toLocaleString()}
-                  </div>
+              <div className="mb-3">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span className="font-semibold text-ink-50">@{r.username}</span>
+                  <span className="text-ink-400">·</span>
+                  <span className="text-sm text-ink-300">{r.callsign}</span>
+                  {r.isBrigadaMember && (
+                    <span className="rounded-full border border-gold-500/40 bg-gold-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gold-500">
+                      Brigada Member
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-xs text-ink-400">
+                  {r.email} · {new Date(r.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+
+              <div className="flex flex-wrap items-end gap-2">
                 <Field label="Role on approval">
                   <Select
-                    className="!w-auto min-w-[10rem]"
+                    className="!w-auto min-w-[11rem]"
                     value={roles[r.id] ?? 'documenter'}
                     onChange={(e) =>
                       setRoles({
@@ -123,22 +133,24 @@ export function AccessRequestsPanel() {
                     <option value="admin">Administrator</option>
                   </Select>
                 </Field>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  disabled={busyId === r.id}
-                  onClick={() => handleApprove(r.id)}
-                >
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="danger"
-                  disabled={busyId === r.id}
-                  onClick={() => handleReject(r.id)}
-                >
-                  Reject
-                </Button>
+                <div className="flex gap-2 pb-0.5">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={busyId === r.id}
+                    onClick={() => handleApprove(r.id)}
+                  >
+                    {busyId === r.id ? 'Approving…' : 'Approve'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    disabled={busyId === r.id}
+                    onClick={() => handleReject(r.id)}
+                  >
+                    Reject
+                  </Button>
+                </div>
               </div>
             </li>
           ))}
@@ -146,25 +158,36 @@ export function AccessRequestsPanel() {
       )}
 
       {reviewed.length > 0 ? (
-        <>
-          <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-400">
+        <div>
+          <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400">
             Recently reviewed
           </h3>
-          <ul className="space-y-1.5 text-xs">
+          <ul className="space-y-1.5">
             {reviewed.slice(0, 8).map((r) => (
               <li
                 key={r.id}
-                className="flex flex-wrap gap-x-2 border-b border-navy-800 py-1.5 text-ink-300"
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-md border border-navy-700/60 px-3 py-2 text-xs text-ink-400"
               >
-                <span className="text-ink-400">
-                  {new Date(r.reviewedAt ?? r.createdAt).toLocaleString()}
+                <span>
+                  <span className="font-medium text-ink-200">@{r.username}</span>
+                  <span className="ml-2 text-ink-500">{r.callsign}</span>
                 </span>
-                <span className="text-ink-100">@{r.username}</span>
-                <span>{ACCESS_REQUEST_STATUS_LABELS[r.status]}</span>
+                <span
+                  className={
+                    r.status === 'approved' ? 'text-ok-400' : 'text-alert-400'
+                  }
+                >
+                  {ACCESS_REQUEST_STATUS_LABELS[r.status]}
+                </span>
+                <span className="text-ink-500">
+                  {r.reviewedAt
+                    ? new Date(r.reviewedAt).toLocaleDateString()
+                    : ''}
+                </span>
               </li>
             ))}
           </ul>
-        </>
+        </div>
       ) : null}
     </section>
   )

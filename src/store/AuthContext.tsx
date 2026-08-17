@@ -371,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const adminEmail = settings.email.adminNotificationEmail.trim()
       if (settings.email.enabled && adminEmail) {
         const memberLabel = input.isBrigadaMember ? 'Yes' : 'No'
-        await sendEmail(settings.email, {
+        sendEmail(settings.email, {
           to: adminEmail,
           subject: `[SVFAR Studio] New access request — ${username}`,
           body: [
@@ -433,7 +433,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         '',
         'Brigada Onse SVFAR Studio',
       ].join('\n')
-      const emailSent = await sendEmail(settings.email, {
+      const emailSent = sendEmail(settings.email, {
         to: request.email,
         subject: 'Brigada Onse SVFAR Studio — Your access has been approved',
         body: emailBody,
@@ -470,7 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const reasonLine = reason?.trim()
           ? `\n\nReason: ${reason.trim()}`
           : ''
-        await sendEmail(settings.email, {
+        sendEmail(settings.email, {
           to: request.email,
           subject: 'Brigada Onse SVFAR Studio — Access request update',
           body: [

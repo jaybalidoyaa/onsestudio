@@ -6,31 +6,35 @@ export interface SendEmailInput {
   body: string
 }
 
-export async function sendEmail(
+/**
+ * Opens a Gmail compose window pre-filled with the message.
+ * Uses the Gmail web compose URL — no third-party API or key required.
+ * Returns true if the window was opened, false if email is not enabled
+ * or the admin Gmail address is not set.
+ */
+export function sendEmail(
   settings: EmailSettings,
   input: SendEmailInput,
-): Promise<boolean> {
-  if (!settings.enabled || !settings.web3formsAccessKey.trim()) {
+): boolean {
+  if (!settings.enabled || !settings.gmailAddress.trim()) {
     return false
   }
 
-  const res = await fetch('https://api.web3forms.com/submit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      access_key: settings.web3formsAccessKey.trim(),
-      subject: input.subject,
-      from_name: 'Brigada Onse SVFAR Studio',
-      email: input.to,
-      message: input.body,
-    }),
+  const params = new URLSearchParams({
+    view: 'cm',
+    to: input.to,
+    su: input.subject,
+    body: input.body,
   })
 
-  if (!res.ok) return false
-  const data = (await res.json()) as { success?: boolean }
-  return data.success === true
+  const url = `https://mail.google.com/mail/?${params.toString()}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+  return true
 }
 
+/**
+ * Builds a standard mailto: link as a fallback when Gmail is not configured.
+ */
 export function buildMailtoLink(input: SendEmailInput): string {
   const params = new URLSearchParams({
     subject: input.subject,

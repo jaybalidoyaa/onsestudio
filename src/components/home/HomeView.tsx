@@ -62,22 +62,23 @@ export function HomeView() {
       />
 
       <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+        {/* Hero */}
         <section className="flex flex-col items-center pb-10 pt-4 text-center sm:pb-12 sm:pt-8">
           <img
             src="/logo.png"
             alt="Brigada Onse Sun Valley Fire and Rescue"
-            className="mb-6 h-28 w-28 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:h-36 sm:w-36"
+            className="mb-7 h-28 w-28 object-contain drop-shadow-[0_8px_32px_rgba(0,0,0,0.5)] sm:h-36 sm:w-36"
             width={144}
             height={144}
           />
           <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl">
             Brigada Onse SVFAR
           </h1>
-          <p className="mt-2 text-lg font-semibold uppercase tracking-[0.2em] text-gold-500">
+          <p className="mt-2.5 text-lg font-semibold uppercase tracking-[0.22em] text-gold-500">
             Studio
           </p>
 
-          <div className="mx-auto mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-ink-300 sm:text-base">
+          <div className="mx-auto mt-8 max-w-2xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
             <p>{STUDIO_INTRO}</p>
             <p>{STUDIO_PURPOSE}</p>
             <p>{STUDIO_SCOPE}</p>
@@ -85,7 +86,7 @@ export function HomeView() {
             <p className="text-gold-500">{STUDIO_CLOSING}</p>
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             {canEdit ? (
               <Button
                 variant="primary"
@@ -112,30 +113,34 @@ export function HomeView() {
             </Button>
           </div>
 
-          <p className="mt-6 text-xs text-ink-400">
+          <p className="mt-5 text-xs text-ink-400">
             Signed in as{' '}
-            <span className="font-medium text-ink-100">{user?.displayName}</span>
-            {isAdmin ? ' · Administrator' : ''}
+            <span className="font-medium text-ink-200">{user?.displayName}</span>
+            {isAdmin ? (
+              <span className="ml-1 text-gold-500">· Administrator</span>
+            ) : null}
           </p>
         </section>
 
-        <div className="mb-8 grid grid-cols-3 gap-3 border-y border-navy-700 py-4 text-center">
+        {/* Stats bar */}
+        <div className="mb-8 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-navy-700 bg-navy-700">
           {[
             ['Session photos', String(session.photos.length)],
             ['Albums', String(albums.length)],
             ['Frames', String(frames.length)],
           ].map(([label, value]) => (
-            <div key={label}>
+            <div key={label} className="bg-navy-900 py-4 text-center">
               <div className="text-2xl font-semibold text-ink-50">{value}</div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+              <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
                 {label}
               </div>
             </div>
           ))}
         </div>
 
+        {/* Workspaces */}
         <section className="pb-10">
-          <h2 className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+          <h2 className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">
             Workspaces
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -144,13 +149,15 @@ export function HomeView() {
                 key={action.id}
                 type="button"
                 onClick={() => setView(action.id)}
-                className="group border border-navy-700 bg-navy-900/80 p-5 text-left transition-colors hover:border-gold-500/50 hover:bg-navy-850"
+                className="group rounded-xl border border-navy-700 bg-navy-900/80 p-5 text-left transition-all hover:border-gold-500/50 hover:bg-navy-850 hover:shadow-lg"
               >
-                <div className="mb-1 text-sm font-semibold uppercase tracking-wide text-gold-500 group-hover:text-gold-400">
+                <div className="mb-1.5 text-sm font-semibold uppercase tracking-wide text-gold-500 group-hover:text-gold-400">
                   {action.title}
                 </div>
-                <p className="mb-3 text-sm text-ink-300">{action.blurb}</p>
-                <span className="text-xs font-semibold text-ink-100 underline-offset-2 group-hover:underline">
+                <p className="mb-3 text-sm leading-relaxed text-ink-300">
+                  {action.blurb}
+                </p>
+                <span className="text-xs font-semibold text-ink-200 underline-offset-2 group-hover:text-gold-400 group-hover:underline">
                   {action.cta} →
                 </span>
               </button>
@@ -158,7 +165,7 @@ export function HomeView() {
           </div>
         </section>
 
-        <footer className="pb-4 text-center text-[11px] text-ink-400">
+        <footer className="pb-4 text-center text-[11px] text-ink-500">
           {STUDIO_MOTTO} · made with love by{' '}
           <span className="text-gold-500">finest 12</span>
         </footer>

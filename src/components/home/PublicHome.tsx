@@ -69,60 +69,67 @@ export function PublicHome() {
       />
 
       <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex shrink-0 items-center justify-between py-2 sm:py-4">
+        {/* Header */}
+        <header className="flex shrink-0 items-center justify-between py-3 sm:py-5">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt=""
-              className="h-10 w-10 object-contain sm:h-11 sm:w-11"
-              width={44}
-              height={44}
+              className="h-9 w-9 object-contain sm:h-10 sm:w-10"
+              width={40}
+              height={40}
             />
-            <span className="text-sm font-semibold tracking-wide sm:text-base">
-              Brigada Onse SVFAR Studio
-            </span>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-wide text-ink-50 sm:text-base">
+                Brigada Onse SVFAR
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-500">
+                Studio
+              </div>
+            </div>
           </div>
           {!authMode ? (
             <div className="flex items-center gap-2">
               {needsSetup ? (
-                <Button variant="primary" onClick={() => openAuth('setup')}>
+                <Button variant="primary" size="sm" onClick={() => openAuth('setup')}>
                   Set up admin
                 </Button>
               ) : (
                 <>
-                  <Button variant="ghost" onClick={() => openAuth('request')}>
+                  <Button variant="ghost" size="sm" onClick={() => openAuth('request')}>
                     Request access
                   </Button>
-                  <Button variant="primary" onClick={() => openAuth('signin')}>
+                  <Button variant="primary" size="sm" onClick={() => openAuth('signin')}>
                     Sign in
                   </Button>
                 </>
               )}
             </div>
           ) : (
-            <Button variant="ghost" onClick={closeAuth}>
-              Back
+            <Button variant="ghost" size="sm" onClick={closeAuth}>
+              ← Back
             </Button>
           )}
         </header>
 
+        {/* Main content area */}
         {!authMode ? (
-          <section className="flex flex-1 flex-col items-center justify-center pb-10 pt-4 text-center sm:pb-12 sm:pt-8">
+          <section className="flex flex-1 flex-col items-center justify-center pb-12 pt-4 text-center sm:pb-16 sm:pt-6">
             <img
               src="/logo.png"
               alt="Brigada Onse SVFAR"
-              className="mb-6 h-28 w-28 object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] sm:h-36 sm:w-36"
+              className="mb-7 h-28 w-28 object-contain drop-shadow-[0_8px_32px_rgba(0,0,0,0.5)] sm:h-36 sm:w-36"
               width={144}
               height={144}
             />
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-ink-50 sm:text-5xl">
               Brigada Onse SVFAR
             </h1>
-            <p className="mt-2 text-lg font-semibold uppercase tracking-[0.2em] text-gold-500">
+            <p className="mt-2.5 text-lg font-semibold uppercase tracking-[0.22em] text-gold-500">
               Studio
             </p>
 
-            <div className="mx-auto mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-ink-300 sm:text-base">
+            <div className="mx-auto mt-8 max-w-2xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
               <p>{STUDIO_INTRO}</p>
               <p>{STUDIO_PURPOSE}</p>
               <p>{STUDIO_SCOPE}</p>
@@ -130,7 +137,7 @@ export function PublicHome() {
               <p className="text-gold-500">{STUDIO_CLOSING}</p>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               {needsSetup ? (
                 <Button
                   variant="primary"
@@ -162,7 +169,8 @@ export function PublicHome() {
             {!needsSetup ? (
               <p className="mt-6 max-w-md text-xs leading-relaxed text-ink-400">
                 Need an account? Submit an access request with your callsign and
-                email. An administrator will review and email you login credentials.
+                email. An administrator will review and email you login
+                credentials.
               </p>
             ) : (
               <p className="mt-6 max-w-md text-xs leading-relaxed text-ink-400">
@@ -171,77 +179,88 @@ export function PublicHome() {
               </p>
             )}
 
-            <footer className="mt-10 text-[11px] text-ink-400">
+            <footer className="mt-12 text-[11px] text-ink-500">
               Authorized personnel only · made with love by{' '}
               <span className="text-gold-500">finest 12</span>
             </footer>
           </section>
         ) : authMode === 'request' ? (
-          <section className="flex flex-1 items-center justify-center py-8 sm:py-10">
+          <section className="flex flex-1 items-center justify-center py-8 sm:py-12">
             <AccessRequestForm onSuccess={() => {}} onCancel={closeAuth} />
           </section>
         ) : (
-          <section className="flex flex-1 items-center justify-center py-8 sm:py-10">
+          <section className="flex flex-1 items-center justify-center py-8 sm:py-12">
             <form
-              className="w-full max-w-md space-y-3 border border-navy-700 bg-navy-900/95 p-6"
+              className="w-full max-w-md space-y-4 rounded-xl border border-navy-700 bg-navy-900/95 p-6 shadow-2xl sm:p-8"
               onSubmit={(e) => void onSubmit(e)}
             >
-              <h2 className="mb-1 text-center text-lg font-semibold text-ink-50">
-                {needsSetup || authMode === 'setup'
-                  ? 'Create administrator'
-                  : 'Sign in'}
-              </h2>
-              {needsSetup ? (
-                <p className="mb-4 text-center text-xs text-ink-400">
-                  One-time setup for this Studio instance.
-                </p>
-              ) : null}
-              {needsSetup ? (
-                <Field label="Display Name">
+              <div className="mb-2 text-center">
+                <h2 className="text-lg font-semibold text-ink-50">
+                  {needsSetup || authMode === 'setup'
+                    ? 'Create administrator'
+                    : 'Sign in'}
+                </h2>
+                {needsSetup ? (
+                  <p className="mt-1 text-xs text-ink-400">
+                    One-time setup for this Studio instance.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-3">
+                {needsSetup ? (
+                  <Field label="Display Name">
+                    <Input
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      autoComplete="name"
+                      placeholder="Your name or callsign"
+                    />
+                  </Field>
+                ) : null}
+                <Field label="Username">
                   <Input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    autoComplete="name"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    placeholder="Enter your username"
+                    required
+                    autoFocus
                   />
                 </Field>
-              ) : null}
-              <Field label="Username">
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoComplete="username"
-                  required
-                  autoFocus
-                />
-              </Field>
-              <Field label="Password">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={needsSetup ? 'new-password' : 'current-password'}
-                  required
-                />
-              </Field>
-              {needsSetup ? (
-                <Field label="Confirm Password">
+                <Field label="Password">
                   <Input
                     type="password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={needsSetup ? 'new-password' : 'current-password'}
+                    placeholder={needsSetup ? 'Min. 8 characters' : 'Enter your password'}
                     required
                   />
                 </Field>
-              ) : null}
+                {needsSetup ? (
+                  <Field label="Confirm Password">
+                    <Input
+                      type="password"
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      autoComplete="new-password"
+                      placeholder="Re-enter your password"
+                      required
+                    />
+                  </Field>
+                ) : null}
+              </div>
+
               {error ? (
                 <div
-                  className="rounded-md border border-alert-500/40 bg-alert-500/10 px-3 py-2 text-sm text-alert-500"
+                  className="rounded-lg border border-alert-500/40 bg-alert-500/10 px-3 py-2.5 text-sm text-alert-500"
                   role="alert"
                 >
                   {error}
                 </div>
               ) : null}
+
               <Button
                 type="submit"
                 variant="primary"
@@ -255,6 +274,7 @@ export function PublicHome() {
                     ? 'Create Admin Account'
                     : 'Sign In'}
               </Button>
+
               {!needsSetup ? (
                 <p className="pt-1 text-center text-xs text-ink-400">
                   No account?{' '}

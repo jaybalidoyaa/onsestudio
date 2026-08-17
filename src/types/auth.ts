@@ -18,7 +18,8 @@ export interface StudioUser {
 
 export interface EmailSettings {
   enabled: boolean
-  web3formsAccessKey: string
+  /** Gmail address the admin uses to send notifications (opens Gmail compose) */
+  gmailAddress: string
   adminNotificationEmail: string
 }
 
@@ -66,7 +67,7 @@ export const DEFAULT_FACEBOOK_SETTINGS: FacebookSettings = {
 
 export const DEFAULT_EMAIL_SETTINGS: EmailSettings = {
   enabled: false,
-  web3formsAccessKey: '',
+  gmailAddress: '',
   adminNotificationEmail: '',
 }
 

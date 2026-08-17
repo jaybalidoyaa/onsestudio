@@ -255,19 +255,19 @@ export function FacebookView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-navy-950">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-navy-700 bg-navy-900 px-4 py-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-navy-700 bg-navy-900 px-4 py-3.5 sm:px-5">
         <div>
           <h1 className="text-lg font-semibold text-ink-50">Facebook Post</h1>
-          <p className="text-xs text-ink-400">
+          <p className="mt-0.5 text-xs text-ink-400">
             {pageLabel} · {user?.displayName}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-md border border-navy-600 p-0.5">
+          <div className="flex rounded-lg border border-navy-600 p-0.5">
             <button
               type="button"
               onClick={() => setMode('blank')}
-              className={`rounded px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
                 mode === 'blank'
                   ? 'bg-gold-500 text-navy-950'
                   : 'text-ink-300 hover:text-ink-50'
@@ -278,7 +278,7 @@ export function FacebookView() {
             <button
               type="button"
               onClick={() => setMode('album')}
-              className={`rounded px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
                 mode === 'album'
                   ? 'bg-gold-500 text-navy-950'
                   : 'text-ink-300 hover:text-ink-50'
@@ -335,7 +335,7 @@ export function FacebookView() {
                 </Select>
               </Field>
             ) : (
-              <div className="space-y-3 rounded-md border border-navy-600 bg-navy-850 p-3">
+              <div className="space-y-3 rounded-xl border border-navy-600 bg-navy-850 p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                   Manual incident details
                 </p>
@@ -590,7 +590,7 @@ export function FacebookView() {
             ) : null}
           </div>
 
-          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-navy-700 bg-navy-850 px-4 py-3">
+          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-navy-700 bg-navy-900 px-4 py-3 sm:px-5">
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
@@ -614,15 +614,15 @@ export function FacebookView() {
         </section>
 
         {/* Side panel — full height */}
-        <aside className="flex min-h-0 flex-col overflow-y-auto bg-navy-950 p-4">
+        <aside className="flex min-h-0 flex-col overflow-y-auto bg-navy-950 p-4 sm:p-5">
           <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
             Caption fields
           </h3>
-          <dl className="mb-4 space-y-0 border border-navy-700 bg-navy-900">
+          <dl className="mb-4 overflow-hidden rounded-xl border border-navy-700 bg-navy-900">
             {fieldPreview.map(([k, v]) => (
               <div
                 key={k}
-                className="flex justify-between gap-3 border-b border-navy-800 px-3 py-2.5 text-sm last:border-0"
+                className="flex justify-between gap-3 border-b border-navy-800 px-3.5 py-2.5 text-sm last:border-0"
               >
                 <dt className="text-ink-400">{k}</dt>
                 <dd className="max-w-[60%] text-right font-medium text-ink-100">
@@ -632,7 +632,7 @@ export function FacebookView() {
             ))}
           </dl>
 
-          <div className="mb-4 border border-navy-700 bg-navy-900 p-3 text-xs text-ink-300">
+          <div className="mb-4 rounded-xl border border-navy-700 bg-navy-900 p-3.5 text-xs leading-relaxed text-ink-300">
             {mode === 'blank' ? (
               <>
                 Fill details and add photos here. Use{' '}
@@ -649,18 +649,18 @@ export function FacebookView() {
           </div>
 
           {configured ? (
-            <div className="border border-navy-700 bg-navy-900 p-3 text-sm text-ink-300">
+            <div className="rounded-xl border border-ok-500/30 bg-ok-500/5 p-3.5 text-sm text-ink-300">
               Connected to{' '}
               <strong className="text-ink-50">{pageLabel}</strong>
             </div>
           ) : (
-            <div className="border border-warn-500/40 bg-warn-500/10 p-3 text-sm text-ink-100">
+            <div className="rounded-xl border border-warn-500/40 bg-warn-500/10 p-3.5 text-sm text-ink-100">
               Facebook Page is not connected. Ask an admin to add credentials in
               Settings.
             </div>
           )}
 
-          <div className="mt-auto pt-6 text-[11px] text-ink-400">
+          <div className="mt-auto pt-6 text-[11px] text-ink-500">
             {postBlobs.length} photo{postBlobs.length === 1 ? '' : 's'} ready ·{' '}
             {caption.length} characters
           </div>

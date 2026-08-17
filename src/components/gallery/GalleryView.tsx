@@ -55,13 +55,13 @@ export function GalleryView() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-4">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+      <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-4 sm:px-5">
+        <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-ink-50">
               Photo Documentation Gallery
             </h1>
-            <p className="text-sm text-ink-400">
+            <p className="mt-0.5 text-sm text-ink-400">
               Completed incident albums and archives
             </p>
           </div>
@@ -125,13 +125,13 @@ export function GalleryView() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
         {filteredAlbums.length === 0 ? (
-          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed border-navy-600 text-center">
+          <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-navy-600 text-center">
             <h2 className="mb-2 text-lg font-semibold text-ink-50">
               No albums yet
             </h2>
-            <p className="mb-4 max-w-sm text-sm text-ink-400">
+            <p className="mb-5 max-w-sm text-sm leading-relaxed text-ink-400">
               Process photographs in Studio and create an album to archive them
               here.
             </p>
@@ -176,24 +176,24 @@ function AlbumCard({
     <button
       type="button"
       onClick={onOpen}
-      className="group overflow-hidden rounded-lg border border-navy-700 bg-navy-900 text-left transition-colors hover:border-gold-500/50"
+      className="group overflow-hidden rounded-xl border border-navy-700 bg-navy-900 text-left transition-all hover:border-gold-500/50 hover:shadow-lg"
     >
-      <div className="aspect-[16/10] bg-navy-850">
+      <div className="aspect-[16/10] overflow-hidden bg-navy-850">
         {coverUrl ? (
           <img
             src={coverUrl}
             alt=""
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-ink-400">
+          <div className="flex h-full items-center justify-center text-xs text-ink-500">
             Loading cover…
           </div>
         )}
       </div>
-      <div className="space-y-1 p-3">
+      <div className="space-y-1.5 p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-sm font-semibold text-ink-50 group-hover:text-gold-400">
+          <h2 className="text-sm font-semibold leading-snug text-ink-50 group-hover:text-gold-400">
             {album.title}
           </h2>
           <StatusBadge status={album.status} />
@@ -204,7 +204,7 @@ function AlbumCard({
         <p className="text-xs text-ink-400">
           {formatDisplayDate(album.date)} · {album.photoCount} Photos
         </p>
-        <p className="text-[11px] uppercase tracking-wide text-ink-400">
+        <p className="text-[11px] uppercase tracking-wide text-ink-500">
           {album.incidentType}
         </p>
       </div>
@@ -258,8 +258,8 @@ function AlbumDetail({
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-3.5 sm:px-5">
+        <div className="mb-2.5 flex flex-wrap items-center gap-2">
           <Button size="sm" variant="ghost" onClick={onBack}>
             ← Gallery
           </Button>
@@ -268,7 +268,7 @@ function AlbumDetail({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-ink-50">{album.title}</h1>
-            <p className="text-sm text-ink-300">
+            <p className="mt-0.5 text-sm text-ink-300">
               {album.address ||
                 [album.location, album.barangay, album.city]
                   .filter(Boolean)
@@ -282,7 +282,7 @@ function AlbumDetail({
               <p className="mt-1 text-xs text-ink-300">Alarm: {album.alarm}</p>
             ) : null}
             {album.unit || album.respondingUnits ? (
-              <p className="mt-1 text-xs text-ink-300">
+              <p className="mt-0.5 text-xs text-ink-300">
                 Responding: {album.unit || album.respondingUnits}
               </p>
             ) : null}
@@ -358,12 +358,12 @@ function AlbumDetail({
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {photos.map((photo, index) => (
             <div
               key={photo.id}
-              className="group relative overflow-hidden rounded-md border border-navy-700 bg-navy-900"
+              className="group relative overflow-hidden rounded-lg border border-navy-700 bg-navy-900 transition-colors hover:border-navy-600"
             >
               <button
                 type="button"
@@ -377,11 +377,11 @@ function AlbumDetail({
                   loading="lazy"
                 />
               </button>
-              <div className="flex items-center justify-between px-2 py-1.5 text-[10px] text-ink-300">
+              <div className="flex items-center justify-between px-2 py-1.5 text-[10px] text-ink-400">
                 <span>PHOTO {padPhotoNumber(index, photos.length)}</span>
                 <button
                   type="button"
-                  className="opacity-0 group-hover:opacity-100 hover:text-gold-500"
+                  className="opacity-0 transition-opacity group-hover:opacity-100 hover:text-gold-500"
                   onClick={() => void setAlbumCover(albumId, photo.id)}
                 >
                   Cover
@@ -438,12 +438,12 @@ function EditAlbumModal({
   onSave: () => void
 }) {
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-navy-950/80 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-navy-600 bg-navy-900 p-4">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gold-500">
+    <div className="absolute inset-0 z-40 flex items-center justify-center bg-navy-950/80 p-4 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-navy-600 bg-navy-900 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gold-500">
           Edit Album Details
         </h2>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5">
           <Field label="Title">
             <Input
               value={draft.title ?? ''}
@@ -549,12 +549,12 @@ function EditAlbumModal({
             />
           </Field>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-5 flex justify-end gap-2.5">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="primary" onClick={onSave}>
-            Save
+            Save Changes
           </Button>
         </div>
       </div>

@@ -59,35 +59,41 @@ export function SettingsView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-navy-950">
-      <div className="flex shrink-0 flex-wrap items-end justify-between gap-3 border-b border-navy-700 bg-navy-900 px-4 py-3">
+      {/* Page header */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-navy-700 bg-navy-900 px-4 py-3.5">
         <div>
           <h1 className="text-lg font-semibold text-ink-50">Settings</h1>
-          <p className="text-xs text-ink-400">
+          <p className="mt-0.5 text-xs text-ink-400">
             Access, Facebook Page, storage, and preferences
           </p>
         </div>
         {(msg || err) && (
-          <p
-            className={`text-sm ${err ? 'text-alert-500' : 'text-ok-500'}`}
+          <div
+            className={`rounded-lg border px-3 py-1.5 text-sm ${
+              err
+                ? 'border-alert-500/40 bg-alert-500/10 text-alert-400'
+                : 'border-ok-500/40 bg-ok-500/10 text-ok-400'
+            }`}
             role="status"
           >
             {err || msg}
-          </p>
+          </div>
         )}
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2">
-        {/* Left column */}
-        <div className="min-h-0 space-y-0 overflow-y-auto border-r border-navy-700">
-          <section className="border-b border-navy-700 p-4">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+        {/* ── Left column ── */}
+        <div className="min-h-0 overflow-y-auto border-r border-navy-700">
+          {/* About */}
+          <section className="border-b border-navy-700 p-5">
+            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
               About
             </h2>
-            <div className="mb-3 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3.5">
               <img
                 src="/logo.png"
                 alt="Brigada Onse SVFAR"
-                className="h-14 w-14 object-contain"
+                className="h-14 w-14 shrink-0 object-contain"
                 width={56}
                 height={56}
               />
@@ -95,12 +101,12 @@ export function SettingsView() {
                 <div className="font-semibold text-ink-50">
                   Brigada Onse SVFAR Studio
                 </div>
-                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-500">
+                <div className="mt-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-gold-500">
                   Photo documentation & framing
                 </div>
               </div>
             </div>
-            <div className="space-y-3 text-sm leading-relaxed text-ink-300">
+            <div className="space-y-2.5 text-sm leading-relaxed text-ink-300">
               <p>
                 Introducing Brigada Onse SVFAR Studio — our dedicated photo
                 documentation and framing platform built for Brigada Onse Sun
@@ -126,34 +132,27 @@ export function SettingsView() {
                 the mission.
               </p>
             </div>
-            <p className="mt-3 text-xs text-ink-400">
+            <p className="mt-4 text-xs text-ink-400">
               Signed in as{' '}
-              <strong className="text-ink-100">{user?.displayName}</strong> (
-              {user ? ROLE_LABELS[user.role] : '—'}) · made with love by{' '}
+              <strong className="text-ink-200">{user?.displayName}</strong> ·{' '}
+              {user ? ROLE_LABELS[user.role] : '—'} · made with love by{' '}
               <span className="text-gold-500">finest 12</span>
             </p>
           </section>
 
+          {/* Email notifications — admin only */}
           {isAdmin ? (
-            <section className="border-b border-navy-700 p-4">
-              <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+            <section className="border-b border-navy-700 p-5">
+              <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Email notifications
               </h2>
-              <p className="mb-3 text-xs text-ink-400">
-                Configure Web3Forms to send access-request alerts and login
-                credentials. Get a free access key at{' '}
-                <a
-                  href="https://web3forms.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-gold-500 hover:underline"
-                >
-                  web3forms.com
-                </a>
-                .
+              <p className="mb-4 mt-1 text-xs leading-relaxed text-ink-400">
+                When enabled, access-request alerts and approval emails open a
+                pre-filled Gmail compose window in your browser. No third-party
+                service or API key required — just your Gmail address.
               </p>
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-sm text-ink-200">
+              <div className="space-y-3.5">
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink-200 select-none">
                   <input
                     type="checkbox"
                     checked={emailSettings.enabled}
@@ -165,23 +164,30 @@ export function SettingsView() {
                     }
                     className="accent-gold-500"
                   />
-                  Enable email notifications
+                  Enable email notifications via Gmail
                 </label>
-                <Field label="Web3Forms Access Key">
+                <Field
+                  label="Your Gmail address"
+                  hint="Gmail compose will open in your browser when notifications are triggered"
+                >
                   <Input
-                    type="password"
-                    value={emailSettings.web3formsAccessKey}
+                    type="email"
+                    value={emailSettings.gmailAddress}
                     onChange={(e) =>
                       setEmailSettings({
                         ...emailSettings,
-                        web3formsAccessKey: e.target.value,
+                        gmailAddress: e.target.value,
                       })
                     }
-                    placeholder="Your Web3Forms access key"
-                    autoComplete="off"
+                    placeholder="yourname@gmail.com"
+                    autoComplete="email"
+                    disabled={!emailSettings.enabled}
                   />
                 </Field>
-                <Field label="Admin notification email">
+                <Field
+                  label="Admin notification email"
+                  hint="Where new access-request alerts are addressed"
+                >
                   <Input
                     type="email"
                     value={emailSettings.adminNotificationEmail}
@@ -192,10 +198,11 @@ export function SettingsView() {
                       })
                     }
                     placeholder="admin@example.com"
+                    disabled={!emailSettings.enabled}
                   />
                 </Field>
               </div>
-              <div className="mt-3">
+              <div className="mt-4">
                 <Button
                   variant="primary"
                   disabled={busy}
@@ -215,45 +222,48 @@ export function SettingsView() {
             </section>
           ) : null}
 
+          {/* Facebook Page — admin only */}
           {isAdmin ? (
-            <section className="border-b border-navy-700 p-4">
-              <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+            <section className="border-b border-navy-700 p-5">
+              <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Facebook Page
               </h2>
-              <div className="mb-3 space-y-2 border border-navy-700 bg-navy-900 p-3 text-xs text-ink-300">
+              <div className="mb-4 mt-1 space-y-1.5 rounded-lg border border-navy-700 bg-navy-900 p-3 text-xs text-ink-300">
                 <p className="font-semibold text-gold-500">
                   Use a Page Access Token — not a User token
                 </p>
                 <p>
                   Required:{' '}
-                  <code className="text-gold-500">pages_show_list</code>,{' '}
-                  <code className="text-gold-500">pages_manage_posts</code>,{' '}
-                  <code className="text-gold-500">pages_read_engagement</code>
+                  <code className="rounded bg-navy-800 px-1 py-0.5 text-gold-400">pages_show_list</code>
+                  {', '}
+                  <code className="rounded bg-navy-800 px-1 py-0.5 text-gold-400">pages_manage_posts</code>
+                  {', '}
+                  <code className="rounded bg-navy-800 px-1 py-0.5 text-gold-400">pages_read_engagement</code>
                 </p>
                 <p>
                   Graph API Explorer → token with those permissions →{' '}
-                  <code className="text-ink-100">GET /me/accounts</code> → paste
-                  Page <code className="text-ink-100">id</code> +{' '}
-                  <code className="text-ink-100">access_token</code>.
+                  <code className="rounded bg-navy-800 px-1 py-0.5 text-ink-100">GET /me/accounts</code>{' '}
+                  → paste Page <code className="rounded bg-navy-800 px-1 py-0.5 text-ink-100">id</code>{' '}
+                  + <code className="rounded bg-navy-800 px-1 py-0.5 text-ink-100">access_token</code>.
                 </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Page ID">
-                  <Input
-                    value={fb.pageId}
-                    onChange={(e) => setFb({ ...fb, pageId: e.target.value })}
-                    placeholder="From /me/accounts → id"
-                  />
-                </Field>
-                <Field label="Page Name">
-                  <Input
-                    value={fb.pageName}
-                    onChange={(e) => setFb({ ...fb, pageName: e.target.value })}
-                    placeholder="Brigada Onse SVFAR"
-                  />
-                </Field>
-              </div>
-              <div className="mt-3">
+              <div className="space-y-3.5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Page ID">
+                    <Input
+                      value={fb.pageId}
+                      onChange={(e) => setFb({ ...fb, pageId: e.target.value })}
+                      placeholder="From /me/accounts → id"
+                    />
+                  </Field>
+                  <Field label="Page Name">
+                    <Input
+                      value={fb.pageName}
+                      onChange={(e) => setFb({ ...fb, pageName: e.target.value })}
+                      placeholder="Brigada Onse SVFAR"
+                    />
+                  </Field>
+                </div>
                 <Field label="Page Access Token">
                   <Input
                     type="password"
@@ -265,8 +275,6 @@ export function SettingsView() {
                     autoComplete="off"
                   />
                 </Field>
-              </div>
-              <div className="mt-3">
                 <Field label="Default Hashtags">
                   <Input
                     value={fb.defaultHashtags}
@@ -276,7 +284,7 @@ export function SettingsView() {
                   />
                 </Field>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
                   disabled={busy}
@@ -326,11 +334,12 @@ export function SettingsView() {
             </section>
           ) : null}
 
-          <section className="border-b border-navy-700 p-4">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+          {/* Storage & session */}
+          <section className="border-b border-navy-700 p-5">
+            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
               Storage & session
             </h2>
-            <div className="mb-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+            <div className="mb-4 grid grid-cols-2 gap-2.5 text-sm sm:grid-cols-4">
               {[
                 ['Output', '940×788'],
                 ['Photos', String(session.photos.length)],
@@ -339,16 +348,16 @@ export function SettingsView() {
               ].map(([k, v]) => (
                 <div
                   key={k}
-                  className="border border-navy-700 bg-navy-900 px-3 py-2"
+                  className="rounded-lg border border-navy-700 bg-navy-900 px-3 py-2.5"
                 >
                   <div className="text-[10px] uppercase tracking-wide text-ink-400">
                     {k}
                   </div>
-                  <div className="font-semibold text-ink-50">{v}</div>
+                  <div className="mt-0.5 font-semibold text-ink-50">{v}</div>
                 </div>
               ))}
             </div>
-            <p className="mb-3 text-xs text-ink-400">
+            <p className="mb-4 text-xs leading-relaxed text-ink-400">
               Data stays in this browser (IndexedDB). Clearing site data removes
               users, albums, frames, and settings.
             </p>
@@ -382,11 +391,12 @@ export function SettingsView() {
             </div>
           </section>
 
-          <section className="p-4">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+          {/* Keyboard shortcuts */}
+          <section className="p-5">
+            <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
               Keyboard shortcuts
             </h2>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-sm">
               {SHORTCUTS.map(([k, v]) => (
                 <div key={k} className="contents">
                   <dt className="font-mono text-xs text-gold-500">{k}</dt>
@@ -397,112 +407,128 @@ export function SettingsView() {
           </section>
         </div>
 
-        {/* Right column */}
-        <div className="flex min-h-0 flex-col overflow-hidden bg-navy-900/40">
+        {/* ── Right column ── */}
+        <div className="flex min-h-0 flex-col overflow-hidden bg-navy-900/30">
           {isAdmin ? (
             <>
               <AccessRequestsPanel />
-              <section className="min-h-0 flex-1 overflow-y-auto border-b border-navy-700 p-4">
-                <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+
+              {/* Users & access */}
+              <section className="min-h-0 flex-1 overflow-y-auto border-b border-navy-700 p-5">
+                <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                   Users & access
                 </h2>
-                <p className="mb-3 text-xs text-ink-400">
+                <p className="mb-4 mt-1 text-xs leading-relaxed text-ink-400">
                   Admins manage accounts. Documenters process photos. Viewers
                   browse Gallery only.
                 </p>
 
-                <div className="mb-4 grid gap-2 border border-navy-700 bg-navy-950 p-3 sm:grid-cols-2">
-                  <Field label="Username">
-                    <Input
-                      value={newUser.username}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, username: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field label="Display Name">
-                    <Input
-                      value={newUser.displayName}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, displayName: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field label="Temporary Password">
-                    <Input
-                      type="password"
-                      value={newUser.password}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, password: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field label="Role">
-                    <Select
-                      value={newUser.role}
-                      onChange={(e) =>
-                        setNewUser({
-                          ...newUser,
-                          role: e.target.value as UserRole,
-                        })
-                      }
-                    >
-                      <option value="admin">Administrator</option>
-                      <option value="documenter">Documentation Officer</option>
-                      <option value="viewer">Viewer</option>
-                    </Select>
-                  </Field>
-                  <div className="sm:col-span-2">
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        void createUser(newUser)
-                          .then(() => {
-                            setNewUser({
-                              username: '',
-                              displayName: '',
-                              password: '',
-                              role: 'documenter',
-                            })
-                            flash('User created.')
+                {/* Add user form */}
+                <div className="mb-5 rounded-lg border border-navy-700 bg-navy-950 p-4">
+                  <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-300">
+                    Add user
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Username">
+                      <Input
+                        value={newUser.username}
+                        onChange={(e) =>
+                          setNewUser({ ...newUser, username: e.target.value })
+                        }
+                        placeholder="login username"
+                      />
+                    </Field>
+                    <Field label="Display Name">
+                      <Input
+                        value={newUser.displayName}
+                        onChange={(e) =>
+                          setNewUser({ ...newUser, displayName: e.target.value })
+                        }
+                        placeholder="Name or callsign"
+                      />
+                    </Field>
+                    <Field label="Temporary Password">
+                      <Input
+                        type="password"
+                        value={newUser.password}
+                        onChange={(e) =>
+                          setNewUser({ ...newUser, password: e.target.value })
+                        }
+                        placeholder="Min. 8 characters"
+                      />
+                    </Field>
+                    <Field label="Role">
+                      <Select
+                        value={newUser.role}
+                        onChange={(e) =>
+                          setNewUser({
+                            ...newUser,
+                            role: e.target.value as UserRole,
                           })
-                          .catch((e: unknown) =>
-                            setErr(
-                              e instanceof Error
-                                ? e.message
-                                : 'Could not create user.',
-                            ),
-                          )
-                      }}
-                    >
-                      Add User
-                    </Button>
+                        }
+                      >
+                        <option value="admin">Administrator</option>
+                        <option value="documenter">Documentation Officer</option>
+                        <option value="viewer">Viewer</option>
+                      </Select>
+                    </Field>
+                    <div className="sm:col-span-2">
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          void createUser(newUser)
+                            .then(() => {
+                              setNewUser({
+                                username: '',
+                                displayName: '',
+                                password: '',
+                                role: 'documenter',
+                              })
+                              flash('User created.')
+                            })
+                            .catch((e: unknown) =>
+                              setErr(
+                                e instanceof Error
+                                  ? e.message
+                                  : 'Could not create user.',
+                              ),
+                            )
+                        }}
+                      >
+                        Add User
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                <ul className="space-y-2">
+                {/* User list */}
+                <ul className="space-y-2.5">
                   {users.map((u) => (
                     <li
                       key={u.id}
-                      className="border border-navy-700 bg-navy-950 p-3"
+                      className="rounded-lg border border-navy-700 bg-navy-950 p-3.5"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <div className="font-medium text-ink-50">
-                            {u.displayName}{' '}
-                            <span className="text-ink-400">@{u.username}</span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-baseline gap-x-2">
+                            <span className="font-medium text-ink-50">
+                              {u.displayName}
+                            </span>
+                            <span className="text-sm text-ink-400">@{u.username}</span>
                           </div>
-                          <div className="text-xs text-ink-400">
+                          <div className="mt-0.5 text-xs text-ink-400">
                             {ROLE_LABELS[u.role]} ·{' '}
-                            {u.active ? 'Active' : 'Disabled'}
+                            <span className={u.active ? 'text-ok-400' : 'text-alert-400'}>
+                              {u.active ? 'Active' : 'Disabled'}
+                            </span>
                             {u.lastLoginAt
-                              ? ` · Last login ${new Date(u.lastLoginAt).toLocaleString()}`
+                              ? ` · Last login ${new Date(u.lastLoginAt).toLocaleDateString()}`
                               : ''}
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           <Select
-                            className="!w-auto"
+                            className="!w-auto text-xs"
                             value={u.role}
                             onChange={(e) =>
                               void updateUser(u.id, {
@@ -517,9 +543,7 @@ export function SettingsView() {
                             }
                           >
                             <option value="admin">Administrator</option>
-                            <option value="documenter">
-                              Documentation Officer
-                            </option>
+                            <option value="documenter">Documentation Officer</option>
                             <option value="viewer">Viewer</option>
                           </Select>
                           <Button
@@ -583,25 +607,30 @@ export function SettingsView() {
                 </ul>
               </section>
 
-              <section className="flex max-h-[40%] min-h-[160px] flex-col border-t border-navy-700 p-4">
+              {/* Activity log */}
+              <section className="flex max-h-[38%] min-h-[160px] flex-col p-5">
                 <h2 className="mb-3 shrink-0 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                   Activity log
                 </h2>
                 {activity.length === 0 ? (
                   <p className="text-sm text-ink-400">No recent activity.</p>
                 ) : (
-                  <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto text-xs">
+                  <ul className="min-h-0 flex-1 space-y-0 overflow-y-auto rounded-lg border border-navy-700 bg-navy-950">
                     {activity.map((a) => (
                       <li
                         key={a.id}
-                        className="grid grid-cols-[6.5rem_5rem_1fr] gap-2 border-b border-navy-800 py-1.5 text-ink-300"
+                        className="grid grid-cols-[6rem_5rem_1fr] gap-x-3 border-b border-navy-800 px-3 py-2 text-xs text-ink-400 last:border-0"
                       >
-                        <span className="text-ink-400">
+                        <span className="tabular-nums text-ink-500">
                           {new Date(a.createdAt).toLocaleString()}
                         </span>
-                        <span className="text-gold-500">{a.username}</span>
-                        <span>
-                          <strong className="text-ink-100">{a.action}</strong>{' '}
+                        <span className="truncate font-medium text-gold-500">
+                          {a.username}
+                        </span>
+                        <span className="truncate">
+                          <strong className="font-medium text-ink-200">
+                            {a.action}
+                          </strong>{' '}
                           — {a.detail}
                         </span>
                       </li>
@@ -611,9 +640,13 @@ export function SettingsView() {
               </section>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-ink-400">
-              Ask an administrator for user management and Facebook Page
-              connection.
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+              <p className="text-sm text-ink-300">
+                User management and Page settings are admin-only.
+              </p>
+              <p className="text-xs text-ink-500">
+                Ask an administrator to manage accounts or connect Facebook.
+              </p>
             </div>
           )}
         </div>
