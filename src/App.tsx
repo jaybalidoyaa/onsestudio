@@ -9,18 +9,23 @@ import { GalleryView } from './components/gallery/GalleryView'
 import { FramesView } from './components/frames/FramesView'
 import { FacebookView } from './components/facebook/FacebookView'
 import { SettingsView } from './components/settings/SettingsView'
+import { LogsView } from './components/logs/LogsView'
+import { PostsView } from './components/posts/PostsView'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
 function AppRoutes() {
   const { view, ready, setView } = useStudio()
-  const { canEdit } = useAuth()
+  const { canEdit, isAdmin } = useAuth()
   useKeyboardShortcuts()
 
   useEffect(() => {
     if (!canEdit && (view === 'studio' || view === 'frames')) {
       setView('gallery')
     }
-  }, [canEdit, setView, view])
+    if (!isAdmin && view === 'logs') {
+      setView('home')
+    }
+  }, [canEdit, isAdmin, setView, view])
 
   if (!ready) {
     return (
@@ -38,6 +43,8 @@ function AppRoutes() {
       {view === 'facebook' ? <FacebookView /> : null}
       {view === 'frames' && canEdit ? <FramesView /> : null}
       {view === 'settings' ? <SettingsView /> : null}
+      {view === 'logs' && isAdmin ? <LogsView /> : null}
+      {view === 'posts' ? <PostsView /> : null}
     </AppShell>
   )
 }

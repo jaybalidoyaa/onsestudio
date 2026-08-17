@@ -4,12 +4,14 @@ import { Button } from '../ui/Button'
 import type { AppView } from '../../types'
 import { ROLE_LABELS } from '../../types/auth'
 
-const NAV: { id: AppView; label: string }[] = [
+const NAV: { id: AppView; label: string; adminOnly?: boolean; editorsOnly?: boolean }[] = [
   { id: 'home', label: 'Home' },
-  { id: 'studio', label: 'Studio' },
+  { id: 'studio', label: 'Studio', editorsOnly: true },
   { id: 'gallery', label: 'Gallery' },
+  { id: 'posts', label: 'Posts' },
   { id: 'facebook', label: 'Facebook' },
-  { id: 'frames', label: 'Frames' },
+  { id: 'frames', label: 'Frames', editorsOnly: true },
+  { id: 'logs', label: 'Logs', adminOnly: true },
   { id: 'settings', label: 'Settings' },
 ]
 
@@ -28,7 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     processing,
     createAlbumFromSession,
   } = useStudio()
-  const { user, logout, canEdit } = useAuth()
+  const { user, logout, canEdit, isAdmin } = useAuth()
 
   const processed = session.photos.filter((p) => p.status === 'processed').length
   const selected = session.photos.filter((p) => p.selected).length
@@ -66,9 +68,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Primary nav */}
         <nav className="flex items-center gap-0.5 overflow-x-auto" aria-label="Primary">
           {NAV.map((item) => {
-            if ((item.id === 'studio' || item.id === 'frames') && !canEdit) {
-              return null
-            }
+            if (item.editorsOnly && !canEdit) return null
+            if (item.adminOnly && !isAdmin) return null
             return (
               <button
                 key={item.id}
