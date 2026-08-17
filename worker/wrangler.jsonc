@@ -33,9 +33,9 @@
   // Set secrets with: wrangler secret put GMAIL_APP_PASSWORD
   "vars": {
     // Public URL of the frontend (used in email links)
-    "FRONTEND_URL": "https://your-pages-domain.pages.dev",
+    "FRONTEND_URL": "https://studio.brigadaonse.org",
     // CORS origin — same as FRONTEND_URL in production
-    "CORS_ORIGIN": "https://your-pages-domain.pages.dev"
+    "CORS_ORIGIN": "https://studio.brigadaonse.org"
   }
 
   // Secrets (never put real values here — use wrangler secret put):
