@@ -3,6 +3,7 @@ import { useAuth } from '../../store/AuthContext'
 import { useStudio } from '../../store/StudioContext'
 import { verifyFacebookPage } from '../../lib/facebook'
 import { ROLE_LABELS, type UserRole } from '../../types/auth'
+import { AccessRequestsPanel } from './AccessRequestsPanel'
 import { Button } from '../ui/Button'
 import { Field, Input, Select } from '../ui/Panel'
 
@@ -29,6 +30,7 @@ export function SettingsView() {
     resetUserPassword,
     deleteUser,
     saveFacebookSettings,
+    saveEmailSettings,
     logActivity,
   } = useAuth()
 
@@ -39,13 +41,15 @@ export function SettingsView() {
     role: 'documenter' as UserRole,
   })
   const [fb, setFb] = useState(settings.facebook)
+  const [emailSettings, setEmailSettings] = useState(settings.email)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     setFb(settings.facebook)
-  }, [settings.facebook])
+    setEmailSettings(settings.email)
+  }, [settings.facebook, settings.email])
 
   const flash = (ok: string) => {
     setErr('')
@@ -129,6 +133,87 @@ export function SettingsView() {
               <span className="text-gold-500">finest 12</span>
             </p>
           </section>
+
+          {isAdmin ? (
+            <section className="border-b border-navy-700 p-4">
+              <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
+                Email notifications
+              </h2>
+              <p className="mb-3 text-xs text-ink-400">
+                Configure Web3Forms to send access-request alerts and login
+                credentials. Get a free access key at{' '}
+                <a
+                  href="https://web3forms.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gold-500 hover:underline"
+                >
+                  web3forms.com
+                </a>
+                .
+              </p>
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm text-ink-200">
+                  <input
+                    type="checkbox"
+                    checked={emailSettings.enabled}
+                    onChange={(e) =>
+                      setEmailSettings({
+                        ...emailSettings,
+                        enabled: e.target.checked,
+                      })
+                    }
+                    className="accent-gold-500"
+                  />
+                  Enable email notifications
+                </label>
+                <Field label="Web3Forms Access Key">
+                  <Input
+                    type="password"
+                    value={emailSettings.web3formsAccessKey}
+                    onChange={(e) =>
+                      setEmailSettings({
+                        ...emailSettings,
+                        web3formsAccessKey: e.target.value,
+                      })
+                    }
+                    placeholder="Your Web3Forms access key"
+                    autoComplete="off"
+                  />
+                </Field>
+                <Field label="Admin notification email">
+                  <Input
+                    type="email"
+                    value={emailSettings.adminNotificationEmail}
+                    onChange={(e) =>
+                      setEmailSettings({
+                        ...emailSettings,
+                        adminNotificationEmail: e.target.value,
+                      })
+                    }
+                    placeholder="admin@example.com"
+                  />
+                </Field>
+              </div>
+              <div className="mt-3">
+                <Button
+                  variant="primary"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true)
+                    void saveEmailSettings(emailSettings)
+                      .then(() => flash('Email settings saved.'))
+                      .catch((e: unknown) =>
+                        setErr(e instanceof Error ? e.message : 'Save failed.'),
+                      )
+                      .finally(() => setBusy(false))
+                  }}
+                >
+                  Save Email Settings
+                </Button>
+              </div>
+            </section>
+          ) : null}
 
           {isAdmin ? (
             <section className="border-b border-navy-700 p-4">
@@ -316,6 +401,7 @@ export function SettingsView() {
         <div className="flex min-h-0 flex-col overflow-hidden bg-navy-900/40">
           {isAdmin ? (
             <>
+              <AccessRequestsPanel />
               <section className="min-h-0 flex-1 overflow-y-auto border-b border-navy-700 p-4">
                 <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                   Users & access

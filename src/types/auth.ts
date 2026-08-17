@@ -4,6 +4,9 @@ export interface StudioUser {
   id: string
   username: string
   displayName: string
+  email?: string
+  callsign?: string
+  brigadaMember?: boolean
   role: UserRole
   passwordSalt: string
   passwordHash: string
@@ -11,6 +14,12 @@ export interface StudioUser {
   createdAt: number
   updatedAt: number
   lastLoginAt: number | null
+}
+
+export interface EmailSettings {
+  enabled: boolean
+  web3formsAccessKey: string
+  adminNotificationEmail: string
 }
 
 export interface AuthSession {
@@ -32,6 +41,7 @@ export interface FacebookSettings {
 export interface AppSettings {
   id: 'app'
   facebook: FacebookSettings
+  email: EmailSettings
   requireLogin: boolean
   sessionHours: number
   updatedAt: number
@@ -54,9 +64,16 @@ export const DEFAULT_FACEBOOK_SETTINGS: FacebookSettings = {
     '#BrigadaOnse #SVFAR #SunValleyFireAndRescue #Parañaque #EmergencyResponse',
 }
 
+export const DEFAULT_EMAIL_SETTINGS: EmailSettings = {
+  enabled: false,
+  web3formsAccessKey: '',
+  adminNotificationEmail: '',
+}
+
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   id: 'app',
   facebook: { ...DEFAULT_FACEBOOK_SETTINGS },
+  email: { ...DEFAULT_EMAIL_SETTINGS },
   requireLogin: true,
   sessionHours: 12,
   updatedAt: Date.now(),

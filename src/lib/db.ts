@@ -6,8 +6,9 @@ import type {
   PersistedSessionMeta,
   PersistedStudioPhoto,
 } from '../types'
+import type { AccessRequest } from '../types/access'
 import type { ActivityEntry, AppSettings, StudioUser } from '../types/auth'
-import { DEFAULT_APP_SETTINGS } from '../types/auth'
+import { DEFAULT_APP_SETTINGS, DEFAULT_EMAIL_SETTINGS } from '../types/auth'
 
 interface StudioDB extends DBSchema {
   frames: {
@@ -48,10 +49,15 @@ interface StudioDB extends DBSchema {
     value: ActivityEntry
     indexes: { 'by-created': number }
   }
+  accessRequests: {
+    key: string
+    value: AccessRequest
+    indexes: { 'by-created': number; 'by-status': string }
+  }
 }
 
 const DB_NAME = 'onse-studio'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbPromise: Promise<IDBPDatabase<StudioDB>> | null = null
 
@@ -91,6 +97,16 @@ export function getDb() {
           if (!db.objectStoreNames.contains('activity')) {
             const activity = db.createObjectStore('activity', { keyPath: 'id' })
             activity.createIndex('by-created', 'createdAt')
+          }
+        }
+
+        if (oldVersion < 3) {
+          if (!db.objectStoreNames.contains('accessRequests')) {
+            const accessRequests = db.createObjectStore('accessRequests', {
+              keyPath: 'id',
+            })
+            accessRequests.createIndex('by-created', 'createdAt')
+            accessRequests.createIndex('by-status', 'status')
           }
         }
       },
@@ -265,10 +281,18 @@ export async function getAppSettings(): Promise<AppSettings> {
         ...DEFAULT_APP_SETTINGS.facebook,
         ...existing.facebook,
       },
+      email: {
+        ...DEFAULT_EMAIL_SETTINGS,
+        ...existing.email,
+      },
     }
   }
   await db.put('settings', DEFAULT_APP_SETTINGS)
-  return { ...DEFAULT_APP_SETTINGS, facebook: { ...DEFAULT_APP_SETTINGS.facebook } }
+  return {
+    ...DEFAULT_APP_SETTINGS,
+    facebook: { ...DEFAULT_APP_SETTINGS.facebook },
+    email: { ...DEFAULT_EMAIL_SETTINGS },
+  }
 }
 
 export async function saveAppSettings(settings: AppSettings) {
@@ -292,4 +316,27 @@ export async function listActivity(limit = 40): Promise<ActivityEntry[]> {
   const db = await getDb()
   const all = await db.getAllFromIndex('activity', 'by-created')
   return all.reverse().slice(0, limit)
+}
+
+/* ---------- Access requests ---------- */
+
+export async function saveAccessRequest(request: AccessRequest) {
+  const db = await getDb()
+  await db.put('accessRequests', request)
+}
+
+export async function listAccessRequests(): Promise<AccessRequest[]> {
+  const db = await getDb()
+  const all = await db.getAllFromIndex('accessRequests', 'by-created')
+  return all.reverse()
+}
+
+export async function getAccessRequest(id: string) {
+  const db = await getDb()
+  return db.get('accessRequests', id)
+}
+
+export async function deleteAccessRequest(id: string) {
+  const db = await getDb()
+  await db.delete('accessRequests', id)
 }

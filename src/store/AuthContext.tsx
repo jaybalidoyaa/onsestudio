@@ -9,11 +9,17 @@ import {
 } from 'react'
 import { createSalt, hashPassword, verifyPassword } from '../lib/crypto'
 import * as db from '../lib/db'
+import {
+  generateTempPassword,
+  sendEmail,
+} from '../lib/email'
 import { createId } from '../lib/utils'
+import type { AccessRequest } from '../types/access'
 import type {
   ActivityEntry,
   AppSettings,
   AuthSession,
+  EmailSettings,
   FacebookSettings,
   StudioUser,
   UserRole,
@@ -31,6 +37,7 @@ interface AuthContextValue {
   session: AuthSession | null
   user: StudioUser | null
   users: StudioUser[]
+  accessRequests: AccessRequest[]
   settings: AppSettings
   activity: ActivityEntry[]
   isAdmin: boolean
@@ -47,7 +54,22 @@ interface AuthContextValue {
     displayName: string
     password: string
     role: UserRole
+    email?: string
+    callsign?: string
+    brigadaMember?: boolean
   }) => Promise<void>
+  submitAccessRequest: (input: {
+    isBrigadaMember: boolean
+    username: string
+    email: string
+    callsign: string
+  }) => Promise<void>
+  approveAccessRequest: (
+    id: string,
+    role?: UserRole,
+  ) => Promise<{ username: string; password: string; emailSent: boolean }>
+  rejectAccessRequest: (id: string, reason?: string) => Promise<void>
+  saveEmailSettings: (email: EmailSettings) => Promise<void>
   updateUser: (
     id: string,
     patch: Partial<Pick<StudioUser, 'displayName' | 'role' | 'active'>>,
@@ -96,11 +118,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [user, setUser] = useState<StudioUser | null>(null)
   const [users, setUsers] = useState<StudioUser[]>([])
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([])
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_APP_SETTINGS)
   const [activity, setActivity] = useState<ActivityEntry[]>([])
 
   const refreshUsers = useCallback(async () => {
     setUsers(await db.listUsers())
+  }, [])
+
+  const refreshAccessRequests = useCallback(async () => {
+    setAccessRequests(await db.listAccessRequests())
   }, [])
 
   const refreshActivity = useCallback(async () => {
@@ -126,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(stored)
             setUser(toPublicUser(existing))
             await refreshUsers()
+            await refreshAccessRequests()
             await refreshActivity()
           } else {
             writeSession(null)
@@ -138,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [refreshActivity, refreshUsers])
+  }, [refreshAccessRequests, refreshActivity, refreshUsers])
 
   const issueSession = useCallback(
     async (u: StudioUser, hours: number) => {
@@ -158,9 +186,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await db.saveUser(updated)
       setUser(updated)
       await refreshUsers()
+      await refreshAccessRequests()
       await refreshActivity()
     },
-    [refreshActivity, refreshUsers],
+    [refreshAccessRequests, refreshActivity, refreshUsers],
   )
 
   const logActivity = useCallback(
@@ -267,6 +296,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: string
       password: string
       role: UserRole
+      email?: string
+      callsign?: string
+      brigadaMember?: boolean
     }) => {
       if (session?.role !== 'admin') throw new Error('Admin access required.')
       const username = input.username.trim().toLowerCase()
@@ -283,6 +315,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: createId('user'),
         username,
         displayName: input.displayName.trim() || username,
+        email: input.email?.trim() || undefined,
+        callsign: input.callsign?.trim() || undefined,
+        brigadaMember: input.brigadaMember,
         role: input.role,
         passwordSalt: salt,
         passwordHash,
@@ -296,6 +331,173 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await logActivity('user.create', `Created user ${username} (${input.role})`)
     },
     [logActivity, refreshUsers, session?.role],
+  )
+
+  const submitAccessRequest = useCallback(
+    async (input: {
+      isBrigadaMember: boolean
+      username: string
+      email: string
+      callsign: string
+    }) => {
+      const count = await db.countUsers()
+      if (count === 0) {
+        throw new Error('Studio is not configured yet. Contact an administrator.')
+      }
+      const username = input.username.trim().toLowerCase()
+      const email = input.email.trim().toLowerCase()
+      const callsign = input.callsign.trim()
+      if (username.length < 3) throw new Error('Username must be at least 3 characters.')
+      if (!email.includes('@')) throw new Error('Enter a valid email address.')
+      if (!callsign) throw new Error('Callsign is required.')
+      const existingUser = await db.getUserByUsername(username)
+      if (existingUser) throw new Error('Username is already taken.')
+      const pending = (await db.listAccessRequests()).find(
+        (r) => r.status === 'pending' && r.username === username,
+      )
+      if (pending) throw new Error('An access request for this username is already pending.')
+      const request: AccessRequest = {
+        id: createId('req'),
+        isBrigadaMember: input.isBrigadaMember,
+        username,
+        email,
+        callsign,
+        status: 'pending',
+        createdAt: Date.now(),
+      }
+      await db.saveAccessRequest(request)
+      await refreshAccessRequests()
+
+      const adminEmail = settings.email.adminNotificationEmail.trim()
+      if (settings.email.enabled && adminEmail) {
+        const memberLabel = input.isBrigadaMember ? 'Yes' : 'No'
+        await sendEmail(settings.email, {
+          to: adminEmail,
+          subject: `[SVFAR Studio] New access request — ${username}`,
+          body: [
+            'A new access request was submitted.',
+            '',
+            `Brigada Onse member: ${memberLabel}`,
+            `Username: ${username}`,
+            `Email: ${email}`,
+            `Callsign: ${callsign}`,
+            '',
+            'Sign in to Studio Settings to review and approve or reject this request.',
+          ].join('\n'),
+        })
+      }
+    },
+    [refreshAccessRequests, settings.email],
+  )
+
+  const approveAccessRequest = useCallback(
+    async (id: string, role: UserRole = 'documenter') => {
+      if (session?.role !== 'admin') throw new Error('Admin access required.')
+      const request = await db.getAccessRequest(id)
+      if (!request) throw new Error('Access request not found.')
+      if (request.status !== 'pending') throw new Error('Request already reviewed.')
+      const existingUser = await db.getUserByUsername(request.username)
+      if (existingUser) throw new Error('Username is already taken.')
+      const password = generateTempPassword()
+      await createUser({
+        username: request.username,
+        displayName: request.callsign,
+        password,
+        role,
+        email: request.email,
+        callsign: request.callsign,
+        brigadaMember: request.isBrigadaMember,
+      })
+      const now = Date.now()
+      await db.saveAccessRequest({
+        ...request,
+        status: 'approved',
+        reviewedAt: now,
+        reviewedBy: session.userId,
+      })
+      await refreshAccessRequests()
+      await logActivity(
+        'access.approve',
+        `Approved access for ${request.username} (${request.callsign})`,
+      )
+
+      const loginUrl = window.location.origin
+      const emailBody = [
+        'Your access to Brigada Onse SVFAR Studio has been approved.',
+        '',
+        `Sign in at: ${loginUrl}`,
+        `Username: ${request.username}`,
+        `Temporary password: ${password}`,
+        '',
+        'Please sign in and change your password from Settings after your first login.',
+        '',
+        'Brigada Onse SVFAR Studio',
+      ].join('\n')
+      const emailSent = await sendEmail(settings.email, {
+        to: request.email,
+        subject: 'Brigada Onse SVFAR Studio — Your access has been approved',
+        body: emailBody,
+      })
+      return { username: request.username, password, emailSent }
+    },
+    [
+      createUser,
+      logActivity,
+      refreshAccessRequests,
+      session,
+      settings.email,
+    ],
+  )
+
+  const rejectAccessRequest = useCallback(
+    async (id: string, reason?: string) => {
+      if (session?.role !== 'admin') throw new Error('Admin access required.')
+      const request = await db.getAccessRequest(id)
+      if (!request) throw new Error('Access request not found.')
+      if (request.status !== 'pending') throw new Error('Request already reviewed.')
+      const now = Date.now()
+      await db.saveAccessRequest({
+        ...request,
+        status: 'rejected',
+        reviewedAt: now,
+        reviewedBy: session.userId,
+        rejectionReason: reason?.trim() || undefined,
+      })
+      await refreshAccessRequests()
+      await logActivity('access.reject', `Rejected access for ${request.username}`)
+
+      if (settings.email.enabled) {
+        const reasonLine = reason?.trim()
+          ? `\n\nReason: ${reason.trim()}`
+          : ''
+        await sendEmail(settings.email, {
+          to: request.email,
+          subject: 'Brigada Onse SVFAR Studio — Access request update',
+          body: [
+            'Thank you for your interest in Brigada Onse SVFAR Studio.',
+            '',
+            'Your access request was not approved at this time.',
+            reasonLine,
+            '',
+            'If you believe this was a mistake, contact your administrator.',
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        })
+      }
+    },
+    [logActivity, refreshAccessRequests, session, settings.email],
+  )
+
+  const saveEmailSettings = useCallback(
+    async (email: EmailSettings) => {
+      if (session?.role !== 'admin') throw new Error('Admin access required.')
+      const next = { ...settings, email, updatedAt: Date.now() }
+      await db.saveAppSettings(next)
+      setSettings(next)
+      await logActivity('settings.email', 'Updated email notification settings')
+    },
+    [logActivity, session?.role, settings],
   )
 
   const updateUser = useCallback(
@@ -390,6 +592,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user,
       users,
+      accessRequests,
       settings,
       activity,
       isAdmin: session?.role === 'admin',
@@ -398,6 +601,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       setupAdmin,
       createUser,
+      submitAccessRequest,
+      approveAccessRequest,
+      rejectAccessRequest,
+      saveEmailSettings,
       updateUser,
       resetUserPassword,
       deleteUser: deleteUserFn,
@@ -408,6 +615,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [
       activity,
+      accessRequests,
+      approveAccessRequest,
       createUser,
       deleteUserFn,
       login,
@@ -416,11 +625,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       needsSetup,
       ready,
       refreshActivity,
+      rejectAccessRequest,
       resetUserPassword,
+      saveEmailSettings,
       saveFacebookSettings,
       saveSettings,
       session,
       setupAdmin,
+      submitAccessRequest,
       settings,
       updateUser,
       user,
