@@ -270,30 +270,35 @@ export async function countUsers() {
 
 /* ---------- Settings ---------- */
 
+// Local IndexedDB persisted shape — has an 'id' key required by the store
+type PersistedSettings = AppSettings & { id: string }
+
 export async function getAppSettings(): Promise<AppSettings> {
   const db = await getDb()
-  const existing = await db.get('settings', 'app')
+  const existing = await db.get('settings', 'app') as PersistedSettings | undefined
   if (existing) {
     return {
       ...DEFAULT_APP_SETTINGS,
-      ...(existing as unknown as AppSettings),
+      ...existing,
       facebook: {
         ...DEFAULT_APP_SETTINGS.facebook,
-        ...((existing as unknown as AppSettings).facebook ?? {}),
+        ...(existing.facebook ?? {}),
       },
       email: {
         ...DEFAULT_APP_SETTINGS.email,
-        ...((existing as unknown as AppSettings).email ?? {}),
+        ...(existing.email ?? {}),
       },
     }
   }
-  await db.put('settings', { ...DEFAULT_APP_SETTINGS, id: 'app' } as AppSettings & { id: string })
+  const initial: PersistedSettings = { ...DEFAULT_APP_SETTINGS, id: 'app' }
+  await db.put('settings', initial)
   return { ...DEFAULT_APP_SETTINGS }
 }
 
 export async function saveAppSettings(settings: AppSettings) {
   const db = await getDb()
-  await db.put('settings', { ...(settings as AppSettings & { id: string }), id: 'app', updatedAt: Date.now() })
+  const persisted: PersistedSettings = { ...settings, id: 'app', updatedAt: Date.now() }
+  await db.put('settings', persisted)
 }
 
 /* ---------- Activity ---------- */

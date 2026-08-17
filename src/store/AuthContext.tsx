@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from 'react'
 import * as api from '../lib/api'
-import { buildMailtoLink } from '../lib/email'
 import type { AccessRequest } from '../types/access'
 import type {
   ActivityEntry,
