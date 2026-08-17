@@ -8,6 +8,7 @@ import {
   STUDIO_SCOPE,
 } from '../../lib/brand'
 import { AccessRequestForm } from '../auth/AccessRequestForm'
+import { PublicPostsView } from '../posts/PublicPostsView'
 import { Button } from '../ui/Button'
 import { Field, Input } from '../ui/Panel'
 
@@ -19,12 +20,18 @@ type AuthMode = 'signin' | 'request' | 'setup'
 export function PublicHome() {
   const { needsSetup, login, setupAdmin } = useAuth()
   const [authMode, setAuthMode] = useState<AuthMode | null>(null)
+  const [showPosts, setShowPosts] = useState(false)
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // Show public posts view
+  if (showPosts) {
+    return <PublicPostsView onBack={() => setShowPosts(false)} />
+  }
 
   const openAuth = (mode: AuthMode) => {
     setError('')
@@ -96,6 +103,9 @@ export function PublicHome() {
                 </Button>
               ) : (
                 <>
+                  <Button variant="ghost" size="sm" onClick={() => setShowPosts(true)}>
+                    View Posts
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => openAuth('request')}>
                     Request access
                   </Button>
@@ -151,12 +161,19 @@ export function PublicHome() {
                   <Button
                     variant="primary"
                     size="lg"
+                    onClick={() => setShowPosts(true)}
+                  >
+                    View Posts
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
                     onClick={() => openAuth('signin')}
                   >
                     Sign in
                   </Button>
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="lg"
                     onClick={() => openAuth('request')}
                   >

@@ -227,3 +227,33 @@ export async function deleteAlbumPhoto(request: IRequest, env: Env): Promise<Res
 
   return ok()
 }
+
+// -- PUBLIC ENDPOINTS (No Auth Required) -----------------------
+
+// GET /api/public/albums - List all completed albums
+export async function listPublicAlbums(request: IRequest, env: Env): Promise<Response> {
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM albums WHERE status = 'completed' ORDER BY updated_at DESC",
+  ).all<AlbumRow>()
+
+  return ok({ albums: (results ?? []).map(publicAlbum) })
+}
+
+// GET /api/public/albums/:id/photos - Get photos for a specific album
+export async function listPublicAlbumPhotos(request: IRequest, env: Env): Promise<Response> {
+  const albumId = request.params?.id ?? ''
+  
+  // Verify album exists and is completed
+  const album = await env.DB.prepare(
+    "SELECT id FROM albums WHERE id = ? AND status = 'completed'",
+  ).bind(albumId).first()
+  
+  if (!album) return notFound('Album not found or not published.')
+
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM album_photos WHERE album_id = ? ORDER BY sort_order ASC',
+  ).bind(albumId).all<AlbumPhotoRow>()
+
+  const baseUrl = env.FRONTEND_URL.replace(/\/$/,'')
+  return ok({ photos: (results ?? []).map((r) => publicPhoto(r, baseUrl)) })
+}
