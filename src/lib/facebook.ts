@@ -193,7 +193,23 @@ export async function postPhotosToFacebookPage(options: {
   onProgress?: (current: number, total: number) => void
 }): Promise<FacebookPostResult> {
   const { caption, photos, onProgress } = options
-  if (!photos.length) throw new Error('Select at least one photograph to post.')
+
+  // Always resolve to a Page token before posting (avoids publish_actions / user-token mistakes)
+  const auth = await resolvePageAuth(options.pageId, options.accessToken)
+  const { pageId, accessToken, pageName } = auth
+
+  // Text-only post (no photos) — post directly to /feed
+  if (!photos.length) {
+    if (!caption.trim()) throw new Error('Write something before posting.')
+    const form = new FormData()
+    form.append('message', caption)
+    form.append('access_token', accessToken)
+    const feed = await graphFetch(`/${encodeURIComponent(pageId)}/feed`, {
+      method: 'POST',
+      body: form,
+    })
+    return { photoIds: [], postId: feed.id, pageName }
+  }
 
   // Always resolve to a Page token before posting (avoids publish_actions / user-token mistakes)
   const auth = await resolvePageAuth(options.pageId, options.accessToken)
