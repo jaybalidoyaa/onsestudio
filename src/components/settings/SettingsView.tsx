@@ -101,7 +101,7 @@ export function SettingsView() {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {/* ── Account ── */}
         {tab === 'account' && (
-          <div className="mx-auto max-w-2xl p-6 space-y-8">
+          <div className="w-full p-6 space-y-8">
             {/* About */}
             <section>
               <div className="mb-5 flex items-center gap-4">
@@ -152,7 +152,7 @@ export function SettingsView() {
 
         {/* ── Users & Access ── */}
         {tab === 'users' && isAdmin && (
-          <div className="mx-auto max-w-3xl p-6 space-y-8">
+          <div className="w-full p-6 space-y-8">
             {/* Access requests */}
             <section>
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
@@ -211,7 +211,7 @@ export function SettingsView() {
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Current users
               </h2>
-              <ul className="space-y-3">
+              <ul className="grid gap-3 lg:grid-cols-2">
                 {users.map((u) => (
                   <li key={u.id} className="rounded-xl border border-navy-700 bg-navy-900 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -265,7 +265,7 @@ export function SettingsView() {
 
         {/* ── Email ── */}
         {tab === 'email' && isAdmin && (
-          <div className="mx-auto max-w-2xl p-6 space-y-6">
+          <div className="w-full p-6 space-y-6">
             <section>
               <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Email notifications
@@ -333,7 +333,7 @@ wrangler secret put GMAIL_APP_PASSWORD
 
         {/* ── Facebook ── */}
         {tab === 'facebook' && isAdmin && (
-          <div className="mx-auto max-w-2xl p-6 space-y-6">
+          <div className="w-full p-6 space-y-6">
             <section>
               <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Facebook Page
@@ -410,7 +410,7 @@ wrangler secret put GMAIL_APP_PASSWORD
 
         {/* ── Storage ── */}
         {tab === 'storage' && (
-          <div className="mx-auto max-w-2xl p-6 space-y-6">
+          <div className="w-full p-6 space-y-6">
             <section>
               <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
                 Session & storage

@@ -165,7 +165,7 @@ export function LogsView() {
                   {group.entries.map((entry, i) => (
                     <div
                       key={entry.id}
-                      className={`grid grid-cols-[7rem_auto_5rem_1fr] items-start gap-x-4 gap-y-0.5 px-4 py-3 text-sm ${
+                      className={`grid grid-cols-[8rem_auto_6rem_1fr] items-start gap-x-4 gap-y-0.5 px-4 py-3 text-sm ${
                         i < group.entries.length - 1 ? 'border-b border-navy-800' : ''
                       }`}
                     >

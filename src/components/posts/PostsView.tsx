@@ -56,7 +56,7 @@ export function PostsView() {
     <div className="flex h-full min-h-0 flex-col bg-navy-950">
       {/* Page header */}
       <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-4 sm:px-6">
-        <div className="mx-auto max-w-2xl">
+        <div className="w-full">
           <div className="mb-4 flex items-center gap-3">
             <img src="/logo.png" alt="" className="h-11 w-11 rounded-full bg-navy-800 object-contain p-0.5" />
             <div>
@@ -87,7 +87,7 @@ export function PostsView() {
 
       {/* Feed */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+        <div className="px-4 py-6 sm:px-6">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-navy-700 py-20 text-center">
               <div className="mb-3 text-4xl opacity-20">📋</div>
@@ -101,7 +101,7 @@ export function PostsView() {
               </p>
             </div>
           ) : (
-            <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((album) => (
                 <FeedCard
                   key={album.id}
@@ -282,7 +282,7 @@ function PostDetail({
     <div className="flex h-full min-h-0 flex-col bg-navy-950">
       {/* Header */}
       <div className="shrink-0 border-b border-navy-700 bg-navy-900 px-4 py-3 sm:px-6">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto w-full">
           <button
             type="button"
             onClick={onBack}
@@ -294,7 +294,7 @@ function PostDetail({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 space-y-4">
+        <div className="px-4 py-6 sm:px-6 space-y-4">
 
           {/* Post card */}
           <article className="overflow-hidden rounded-2xl border border-navy-700 bg-navy-900">
@@ -358,7 +358,7 @@ function PostDetail({
               Loading photos…
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}

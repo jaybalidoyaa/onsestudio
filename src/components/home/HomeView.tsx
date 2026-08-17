@@ -61,7 +61,7 @@ export function HomeView() {
         }}
       />
 
-      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative flex min-h-full flex-col px-4 py-8 sm:px-6 lg:px-10">
         {/* Hero */}
         <section className="flex flex-col items-center pb-10 pt-4 text-center sm:pb-12 sm:pt-8">
           <img
@@ -78,7 +78,7 @@ export function HomeView() {
             Studio
           </p>
 
-          <div className="mx-auto mt-8 max-w-2xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
+          <div className="mx-auto mt-8 max-w-4xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
             <p>{STUDIO_INTRO}</p>
             <p>{STUDIO_PURPOSE}</p>
             <p>{STUDIO_SCOPE}</p>
@@ -123,7 +123,7 @@ export function HomeView() {
         </section>
 
         {/* Stats bar */}
-        <div className="mb-8 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-navy-700 bg-navy-700">
+        <div className="mb-8 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-navy-700 bg-navy-700 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
           {[
             ['Session photos', String(session.photos.length)],
             ['Albums', String(albums.length)],
@@ -143,7 +143,7 @@ export function HomeView() {
           <h2 className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">
             Workspaces
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {ACTIONS.filter((a) => canEdit || !a.editorsOnly).map((action) => (
               <button
                 key={action.id}

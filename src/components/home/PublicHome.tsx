@@ -68,7 +68,7 @@ export function PublicHome() {
         }}
       />
 
-      <div className="relative mx-auto flex min-h-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative flex min-h-full flex-col px-4 py-6 sm:px-8 lg:px-12">
         {/* Header */}
         <header className="flex shrink-0 items-center justify-between py-3 sm:py-5">
           <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export function PublicHome() {
               Studio
             </p>
 
-            <div className="mx-auto mt-8 max-w-2xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
+            <div className="mx-auto mt-8 max-w-4xl space-y-3 text-left text-sm leading-relaxed text-ink-300 sm:text-base">
               <p>{STUDIO_INTRO}</p>
               <p>{STUDIO_PURPOSE}</p>
               <p>{STUDIO_SCOPE}</p>
